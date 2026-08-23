@@ -1,1 +1,2 @@
 *.rtf linguist-detectable=false
+data/raw/*.csv text eol=lf

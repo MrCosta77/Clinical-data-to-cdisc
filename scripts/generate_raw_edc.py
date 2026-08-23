@@ -144,9 +144,9 @@ def main() -> None:
     dm = generate_patients(rng)
     vs = generate_vitals(dm, rng)
     ae = generate_adverse_events(dm, rng)
-    dm.to_csv(RAW_DIR / "raw_demog.csv", index=False)
-    vs.to_csv(RAW_DIR / "raw_vitals.csv", index=False)
-    ae.to_csv(RAW_DIR / "raw_ae.csv", index=False)
+    dm.to_csv(RAW_DIR / "raw_demog.csv", index=False, lineterminator="\n")
+    vs.to_csv(RAW_DIR / "raw_vitals.csv", index=False, lineterminator="\n")
+    ae.to_csv(RAW_DIR / "raw_ae.csv", index=False, lineterminator="\n")
     print(f"Generated {len(dm)} subjects, {len(vs)} visits and {len(ae)} adverse events.")
 
 

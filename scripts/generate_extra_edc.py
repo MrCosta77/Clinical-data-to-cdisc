@@ -135,7 +135,11 @@ def generate_extras() -> None:
         "raw_ecg.csv": eg_records,
     }
     for filename, records in outputs.items():
-        pd.DataFrame(records).to_csv(RAW_DIR / filename, index=False)
+        pd.DataFrame(records).to_csv(
+            RAW_DIR / filename,
+            index=False,
+            lineterminator="\n",
+        )
         print(f"Generated {filename}: {len(records)} records")
 
 

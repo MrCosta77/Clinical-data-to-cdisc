@@ -15,6 +15,11 @@ def test_versioned_synthetic_cohort_matches_golden_manifest():
     }
 
 
+def test_versioned_csv_bytes_use_platform_independent_lf_endings():
+    for source in DEFAULT_RAW_DIR.glob("*.csv"):
+        assert b"\r\n" not in source.read_bytes(), f"{source.name} uses CRLF endings"
+
+
 def _copy_raw(tmp_path: Path) -> Path:
     target = tmp_path / "raw"
     target.mkdir()
