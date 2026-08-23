@@ -51,6 +51,13 @@ To run this project locally or in SAS OnDemand for Academics (SODA):
    `python scripts/generate_raw_edc.py`
    `python scripts/generate_extra_edc.py`
 
+   Before uploading the data to SAS, install the pinned Python dependencies and
+   run the raw acceptance gate. It validates schemas, keys, dates, controlled
+   terminology, units, subject timelines, and the versioned golden hashes:
+   `python -m pip install -r requirements.txt`
+   `python scripts/validate_raw_contracts.py`
+   `python -m pytest -v`
+
 3. **Configure the SAS Environment:**
    * Upload the repository to your SAS environment.
    * Open `programs/00_setup.sas`.
