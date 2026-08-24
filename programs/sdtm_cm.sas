@@ -19,6 +19,7 @@ run;
 
 /* 3. PROCESS AND MAP TO SDTM */
 data work.cm_draft;
+    length STUDYID $8 DOMAIN $2 USUBJID $&usubjid_length.;
     set work.raw_cm;
     
     /* Identifiers */

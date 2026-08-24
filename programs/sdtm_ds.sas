@@ -11,10 +11,10 @@ proc import datafile="&project_path./data/raw/raw_demog.csv"
 run;
 
 data sdtm.ds;
+    length STUDYID $8 DOMAIN $2 USUBJID $&usubjid_length. DSCAT DSSCAT $40
+           DSTERM DSDECOD $80 EPOCH $20 DSSTDTC $10;
     retain STUDYID DOMAIN USUBJID DSSEQ DSCAT DSSCAT DSTERM DSDECOD EPOCH DSSTDTC;
     set work.raw_ds;
-    length STUDYID $8 DOMAIN $2 USUBJID $200 DSCAT DSSCAT $40
-           DSTERM DSDECOD $80 EPOCH $20 DSSTDTC $10;
 
     STUDYID = "CDISC-01";
     DOMAIN = "DS";

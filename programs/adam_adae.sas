@@ -64,15 +64,40 @@ data work.adae_draft;
 run;
 
 
-/* 3. FINALIZE AND SAVE TO ADAM LIBRARY */
-proc sort data=work.adae_draft out=adam.adae;
+/* 3. DERIVE FIRST TREATMENT-EMERGENT OCCURRENCE BY DECODED TERM */
+data work.adae_occurrence_order;
+    set work.adae_draft;
+    /* Put treatment-emergent records first within each decoded term. */
+    if TRTEMFL = 'Y' then _occ_order = 0;
+    else _occ_order = 1;
+run;
+
+proc sort data=work.adae_occurrence_order;
+    by USUBJID AEDECOD _occ_order AESTDT AESEQ;
+run;
+
+data work.adae_flagged;
+    set work.adae_occurrence_order;
+    by USUBJID AEDECOD _occ_order;
+    length AOCCFL $1;
+
+    /* Sponsor rule: first treatment-emergent occurrence per subject/PT. */
+    if TRTEMFL = 'Y' and first._occ_order then AOCCFL = 'Y';
+    else AOCCFL = '';
+
+    drop _occ_order;
+run;
+
+
+/* 4. FINALIZE AND SAVE TO ADAM LIBRARY */
+proc sort data=work.adae_flagged out=adam.adae;
     by USUBJID AESTDT AESEQ;
 run;
 
 
-/* 4. VISUAL AUDIT */
-title "ADAE Audit - Adverse Events with Treatment-Emergent Flags";
+/* 5. VISUAL AUDIT */
+title "ADAE Audit - Treatment-Emergent and First-Occurrence Flags";
 proc print data=adam.adae(obs=15);
-    var USUBJID TRT01A AETERM AESEV AESTDT TRTSDT ASTDY TRTEMFL;
+    var USUBJID TRT01A AETERM AESEV AESTDT TRTSDT ASTDY TRTEMFL AOCCFL;
 run;
 title;

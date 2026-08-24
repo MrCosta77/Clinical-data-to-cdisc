@@ -11,7 +11,7 @@ proc import datafile="&project_path./data/raw/raw_vitals.csv"
 run;
 
 data sdtm.sv;
-    length STUDYID $8 DOMAIN $2 USUBJID $200 VISIT $40
+    length STUDYID $8 DOMAIN $2 USUBJID $&usubjid_length. VISIT $40
            SVSTDTC SVENDTC $10;
     retain STUDYID DOMAIN USUBJID VISITNUM VISIT VISITDY SVSTDTC SVENDTC;
     set work.raw_sv;

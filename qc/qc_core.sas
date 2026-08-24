@@ -265,19 +265,66 @@ proc sql noprint;
        or s.DSSTDTC ne d.RFPENDTC;
 quit;
 
+/* RULE 26: DM RACE must use the supported CDISC Controlled Terminology */
+proc sql noprint;
+    create table chk_dm03 as
+    select 'SDTM-020' as CHECK_ID, 'DM' as DOMAIN, 'RACE uses supported CDISC terminology' as RULE,
+           count(*) as N_FAIL
+    from sdtm.dm
+    where missing(RACE)
+       or upcase(strip(RACE)) not in (
+           'WHITE', 'BLACK OR AFRICAN AMERICAN', 'ASIAN', 'OTHER', 'UNKNOWN'
+       );
+quit;
+
+/* RULE 27: DM SITEID must be present and agree with the subject identifier */
+proc sql noprint;
+    create table chk_dm04 as
+    select 'SDTM-021' as CHECK_ID, 'DM' as DOMAIN, 'SITEID present and consistent with SUBJID' as RULE,
+           count(*) as N_FAIL
+    from sdtm.dm
+    where missing(SITEID)
+       or strip(SITEID) ne scan(strip(SUBJID), 1, '-');
+quit;
+
+/* RULE 28: AOCCFL may flag only a treatment-emergent record */
+proc sql noprint;
+    create table chk_adae02 as
+    select 'ADAE-002' as CHECK_ID, 'ADAE' as DOMAIN, 'AOCCFL valid and restricted to TRTEMFL=Y' as RULE,
+           count(*) as N_FAIL
+    from adam.adae
+    where (not missing(AOCCFL) and AOCCFL ne 'Y')
+       or (AOCCFL = 'Y' and TRTEMFL ne 'Y');
+quit;
+
+/* RULE 29: Every subject/PT with a TEAE has exactly one first occurrence */
+proc sql noprint;
+    create table chk_adae03 as
+    select 'ADAE-003' as CHECK_ID, 'ADAE' as DOMAIN, 'One AOCCFL=Y per subject and TEAE term' as RULE,
+           count(*) as N_FAIL
+    from (
+        select USUBJID, AEDECOD
+        from adam.adae
+        group by USUBJID, AEDECOD
+        having sum(case when TRTEMFL = 'Y' then 1 else 0 end) > 0
+           and sum(case when AOCCFL = 'Y' then 1 else 0 end) ne 1
+    );
+quit;
+
 
 /* -------------------------------------------------------------------
    2. CONSOLIDATE RESULTS (Generate Permanent Data)
    ------------------------------------------------------------------- */
 data adam.qc_report;
     /* CORREÇÃO: Definir limites de texto ANTES do set previne os "Warnings" de truncation */
-    length CHECK_ID $10 DOMAIN $10 RULE $50 STATUS $10;
+    length CHECK_ID $10 DOMAIN $10 RULE $70 STATUS $10;
     
     set chk_adsl01 chk_adae01 chk_advs01 chk_adlb01 chk_dm01 
         chk_ae01 chk_ex01 chk_lb01 chk_vs01 chk_adsl02 chk_adtte01
         chk_eg01 chk_eg02 chk_eg03 chk_eg04
         chk_mh01 chk_mh02 chk_mh03 chk_mh04 chk_dm02
-        chk_sv01 chk_sv02 chk_sv03 chk_ds01 chk_ds02;
+        chk_sv01 chk_sv02 chk_sv03 chk_ds01 chk_ds02
+        chk_dm03 chk_dm04 chk_adae02 chk_adae03;
         
     if N_FAIL = 0 then STATUS = "PASS";
     else STATUS = "FAIL";
@@ -298,9 +345,9 @@ title;
    4. SYSTEM ABORT LOGIC (The Professional Pipeline Stopper)
    ------------------------------------------------------------------- */
 proc sql noprint;
-    select count(*) into :n_failed
+    select count(*), sum(STATUS = 'FAIL') into :n_checks, :n_failed
     from adam.qc_report
-    where STATUS = "FAIL";
+    ;
 quit;
 
 %macro abort_if_fail;
@@ -314,7 +361,7 @@ quit;
     %end;
     %else %do;
         %put NOTE: ---------------------------------------------------;
-        %put NOTE: QC VALIDATION COMPLETE. ALL 25 CHECKS PASSED SUCCESSFULLY.;
+        %put NOTE: QC VALIDATION COMPLETE. ALL &n_checks CHECKS PASSED SUCCESSFULLY.;
         %put NOTE: ---------------------------------------------------;
     %end;
 %mend;

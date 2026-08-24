@@ -23,7 +23,8 @@ data work.ae_mapped;
     set work.raw_ae;
     
     /* Pre-define variable lengths to prevent SAS truncation */
-    length AETERM AEDECOD $60 AEREL $15 AESEV $10 AEOUT $30 AESER $1;
+    length STUDYID $8 DOMAIN $2 USUBJID $&usubjid_length.
+           AETERM AEDECOD $60 AEREL $15 AESEV $10 AEOUT $30 AESER $1;
     
     /* Core Identifiers */
     STUDYID = "CDISC-01";

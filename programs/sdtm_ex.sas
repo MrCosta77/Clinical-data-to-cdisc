@@ -20,7 +20,8 @@ data work.ex_mapped;
     set work.raw_ex;
     
     /* Pre-define variable lengths to prevent SAS truncation */
-    length EXTRT $50 EXDOSU $20 EXSTDTC $10 EXENDTC $10;
+    length STUDYID $8 DOMAIN $2 USUBJID $&usubjid_length.
+           EXTRT $50 EXDOSU $20 EXSTDTC $10 EXENDTC $10;
     
     /* Core Identifiers */
     STUDYID = "CDISC-01";

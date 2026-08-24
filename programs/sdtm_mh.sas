@@ -10,7 +10,7 @@ proc import datafile="&project_path./data/raw/raw_mh.csv"
 run;
 
 data sdtm.mh;
-    length STUDYID $8 DOMAIN $2 USUBJID $200 MHTERM $60 MHSTDTC $10;
+    length STUDYID $8 DOMAIN $2 USUBJID $&usubjid_length. MHTERM $60 MHSTDTC $10;
     
     set work.raw_mh;
     

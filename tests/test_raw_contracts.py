@@ -46,6 +46,15 @@ def test_invalid_controlled_term_is_rejected(tmp_path):
         validate_raw_contracts(raw, manifest_path=None)
 
 
+def test_site_must_match_subject_identifier(tmp_path):
+    raw = _copy_raw(tmp_path)
+    dm = pd.read_csv(raw / "raw_demog.csv", dtype=str, keep_default_na=False)
+    dm.loc[0, "SITE"] = "999"
+    dm.to_csv(raw / "raw_demog.csv", index=False, lineterminator="\n")
+    with pytest.raises(ValueError, match="SITE conflicts"):
+        validate_raw_contracts(raw, manifest_path=None)
+
+
 def test_event_outside_subject_timeline_is_rejected(tmp_path):
     raw = _copy_raw(tmp_path)
     visits = pd.read_csv(raw / "raw_vitals.csv", dtype=str, keep_default_na=False)

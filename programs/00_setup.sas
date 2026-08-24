@@ -11,6 +11,7 @@ Description:  Master configuration file. Defines global macro variables
    ===================================================================== */
 
 %let project_path = /home/u64384931/Clinical-data-to-cdisc;
+%let usubjid_length = 40;
 
 /* Initialize SAS Libraries */
 libname raw  "&project_path./data/raw";

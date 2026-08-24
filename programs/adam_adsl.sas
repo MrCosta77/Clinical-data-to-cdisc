@@ -27,7 +27,7 @@ run;
 
 /* 3. MERGE DEMOGRAPHICS AND EXPOSURE TO CREATE ADSL */
 data work.adsl_draft;
-    retain STUDYID USUBJID SUBJID;
+    retain STUDYID USUBJID SUBJID SITEID;
     merge work.dm_sorted(in=a) work.ex_trt(in=b);
     by USUBJID;
     if a; /* Keep all randomized subjects from DM */
@@ -80,7 +80,8 @@ data work.adsl_draft;
     if not missing(TRTSDT) and not missing(TRTEDT) then
         TRTDURD = (TRTEDT - TRTSDT) + 1; /* Inclusive of start day */
 
-    keep STUDYID USUBJID SUBJID TRT01P TRT01A ITTFL SAFFL BRTHDT RFICDT TRTSDT TRTEDT AGE TRTDURD SEX RACE;
+    keep STUDYID USUBJID SUBJID SITEID TRT01P TRT01A ITTFL SAFFL
+         BRTHDT RFICDT TRTSDT TRTEDT AGE TRTDURD SEX RACE;
 run;
 
 

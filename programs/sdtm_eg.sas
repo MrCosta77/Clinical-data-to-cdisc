@@ -10,7 +10,7 @@ proc import datafile="&project_path./data/raw/raw_ecg.csv"
 run;
 
 data sdtm.eg;
-    length STUDYID $8 DOMAIN $2 USUBJID $200 EGTESTCD $8 EGTEST $40
+    length STUDYID $8 DOMAIN $2 USUBJID $&usubjid_length. EGTESTCD $8 EGTEST $40
            EGORRES $20 EGORRESU $20 EGSTRESC $20 EGSTRESU $20 EGDTC $10;
     
     set work.raw_eg;

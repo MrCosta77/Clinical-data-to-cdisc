@@ -110,6 +110,11 @@ def validate_raw_contracts(
 
     _assert_unique(dm, ["SUBJ_ID"], "raw_demog.csv")
     _require((dm["SUBJ_ID"].str.strip() != "").all(), "raw_demog.csv.SUBJ_ID: missing key")
+    _require((dm["SITE"].str.strip() != "").all(), "raw_demog.csv.SITE: missing site")
+    _require(
+        (dm["SUBJ_ID"].str.split("-").str[0] == dm["SITE"]).all(),
+        "raw_demog.csv: SITE conflicts with SUBJ_ID",
+    )
     _assert_terms(dm, "GENDER", {"M", "F", "Male", "Female"}, "raw_demog.csv")
     _assert_terms(dm, "RACE_TXT", {"White", "Black", "Asian", "Other"}, "raw_demog.csv")
     _assert_terms(dm, "ENROLLED", {"Y", "N"}, "raw_demog.csv")

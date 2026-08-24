@@ -19,7 +19,8 @@ run;
 data work.vs_mapped;
     set work.raw_vs;
     
-    length VSTESTCD $8 VSTEST $40 VSORRESU VSSTRESU $20 VSORRES $200;
+    length STUDYID $8 DOMAIN $2 USUBJID $&usubjid_length.
+           VSTESTCD $8 VSTEST $40 VSORRESU VSSTRESU $20 VSORRES $200;
 
     STUDYID = "CDISC-01";
     DOMAIN  = "VS";

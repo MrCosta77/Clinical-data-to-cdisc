@@ -17,7 +17,7 @@ RAW EDC ──▶ SDTM (DM, AE, EX, LB, VS, CM, MH, EG, SV, DS) ──▶ ADaM (
 ## 🛠️ Development Milestones
 
 ### Phase 1: SDTM Transformation
-- **DM:** Core subject identifiers, ISO 8601 date standardizations, and Randomization Arms.
+- **DM:** Core subject and site identifiers, CDISC race terminology, ISO 8601 date standardizations, and Randomization Arms.
 - **VS & LB:** Horizontal-to-vertical unpivoting (wide to long), conditional dictionary mapping, and parameter standardization.
 - **AE, EX & CM:** Sequential numbering, clinical exposure mapping, and concomitant medications standardization.
 - **MH & EG:** Retrospective medical history mapping and electrocardiogram signal standardization.
@@ -28,6 +28,7 @@ RAW EDC ──▶ SDTM (DM, AE, EX, LB, VS, CM, MH, EG, SV, DS) ──▶ ADaM (
 - **ADSL (Subject-Level):** Numeric analysis dates, demographic math (AGE), Treatment Duration, and Population Flags (ITTFL, SAFFL).
   - *Note on Misallocation:* The synthetic generator deliberately introduces treatment deviations (~5%) to realistically demonstrate complex derivations between the Intent-to-Treat (ITT) and Safety populations.
 - **ADVS (Vital Signs):** Advanced Baseline derivations (`ABLFL`) resolving retained PDV memory, and Change from Baseline calculations.
+- **ADAE (Adverse Events):** Treatment-emergent classification (`TRTEMFL`) and the first treatment-emergent occurrence per subject and decoded term (`AOCCFL`).
 - **ADLB (Laboratory Analysis):** Biochemical logic implementation, including on-the-fly SI unit conversions (e.g., Glucose mg/dL to mmol/L) and derivation of clinical abnormality indicators (`LBNRIND`).
 - **ADTTE (Time-to-Event):** Survival analysis dataset modeling, calculating Time to First Adverse Event and applying mathematical right-censoring (`CNSR`) using study cutoff dates.
 
@@ -36,7 +37,7 @@ RAW EDC ──▶ SDTM (DM, AE, EX, LB, VS, CM, MH, EG, SV, DS) ──▶ ADaM (
 - **TLFs (Tables, Listings, Figures):** Generation of regulatory-grade RTF outputs using ODS.
   - **Table 1:** Demographics and Baseline Characteristics (Intent-to-Treat population) using `PROC TABULATE`.
   - **Figure 1:** Kaplan-Meier Survival Curve estimating adverse event probabilities over time using `PROC LIFETEST`.
-- **Define-XML v2.0:** Dynamic extraction of structural metadata using SAS dictionary tables (dictionary.columns) to generate a structural Define-XML v2.0 prototype, demonstrating automated metadata cataloging directly from the datasets.
+- **Define-XML v2.0:** Dynamic extraction of metadata using SAS dictionary tables, enriched with controlled terminology (`CodeList`), variable origins and explicit derivation methods (`MethodDef`). The output remains an educational metadata prototype rather than a submission-ready Define-XML package.
 
 ## ⚙️ How to Reproduce this Pipeline
 
@@ -70,4 +71,4 @@ To run this project locally or in SAS OnDemand for Academics (SODA):
    * **Phase 2 (Core ADaM):** Run `adam_adsl.sas`. *(Crucial: This generates the Safety/ITT populations and treatment dates needed by all subsequent domains).*
    * **Phase 3 (Analysis Domains):** Run `adam_adae.sas`, `adam_advs.sas`, and `adam_adlb.sas`.
    * **Phase 4 (Survival Analysis):** Run `adam_adtte.sas`. *(Note: This explicitly depends on the derived ADAE dataset).*
-   * **Phase 5 (Reporting & Validation):** Run `tlf_table1.sas`, `tlf_figure1.sas`, `qc_core.sas` (25 checks), and finally `generate_define.sas` to output the XML metadata dictionary.
+   * **Phase 5 (Reporting & Validation):** Run `tlf_table1.sas`, `tlf_figure1.sas`, `qc_core.sas` (29 checks), and finally `generate_define.sas` to output the XML metadata dictionary.

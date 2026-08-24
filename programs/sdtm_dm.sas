@@ -18,9 +18,10 @@ run;
 
 /* 3. TRANSFORMATION AND SDTM MAPPING */
 data sdtm.dm;
-    retain STUDYID DOMAIN USUBJID SUBJID RFSTDTC RFENDTC RFPENDTC RFICDTC;
+    length STUDYID $8 DOMAIN $2 USUBJID $&usubjid_length. SUBJID $20 SITEID $10
+           SEX $1 RACE $40 ARM $20 ARMCD $8;
+    retain STUDYID DOMAIN USUBJID SUBJID SITEID RFSTDTC RFENDTC RFPENDTC RFICDTC;
     set work.raw_dm;
-    length ARM $20 ARMCD $8;
     
     /* Study Identifier Variables (Required) */
     STUDYID = "CDISC-01";
@@ -30,6 +31,10 @@ data sdtm.dm;
     /* CDISC Rule: Concatenation of STUDYID and Subject ID */
     SUBJID  = SUBJ_ID;
     USUBJID = catx("-", STUDYID, SUBJID);
+
+    /* Investigator site identifier retained from the EDC extract. */
+    if vtype(SITE) = 'C' then SITEID = strip(SITE);
+    else SITEID = strip(put(SITE, best.));
     
     /* --------------------------------------------------------
        CONTROLLED TERMINOLOGY CLEANING
@@ -40,8 +45,14 @@ data sdtm.dm;
     else if upcase(char(GENDER, 1)) = 'F' then SEX = 'F';
     else SEX = 'U'; /* Unknown */
     
-    /* Race (Uppercase, per standard) */
-    RACE = upcase(RACE_TXT);
+    /* Map the EDC labels to CDISC Controlled Terminology. */
+    select (upcase(strip(RACE_TXT)));
+        when ('WHITE') RACE = 'WHITE';
+        when ('BLACK') RACE = 'BLACK OR AFRICAN AMERICAN';
+        when ('ASIAN') RACE = 'ASIAN';
+        when ('OTHER') RACE = 'OTHER';
+        otherwise RACE = 'UNKNOWN';
+    end;
     
     /* --------------------------------------------------------
        TRIAL DESIGN VARIABLES (ARM, ARMCD)
@@ -86,7 +97,7 @@ data sdtm.dm;
     end;
     
     /* Keep only variables that belong to the SDTM standard */
-    keep STUDYID DOMAIN USUBJID SUBJID SEX RACE BRTHDTC RFSTDTC RFENDTC
+    keep STUDYID DOMAIN USUBJID SUBJID SITEID SEX RACE BRTHDTC RFSTDTC RFENDTC
          RFPENDTC RFICDTC ARM ARMCD;
 run;
 
@@ -94,6 +105,6 @@ run;
 /* 4. VISUAL AUDIT (Quality Check) */
 title "DM Domain Audit (First 10 Records)";
 proc print data=sdtm.dm(obs=10);
-    var STUDYID USUBJID SEX RACE BRTHDTC RFICDTC RFSTDTC RFENDTC RFPENDTC ARM ARMCD;
+    var STUDYID USUBJID SITEID SEX RACE BRTHDTC RFICDTC RFSTDTC RFENDTC RFPENDTC ARM ARMCD;
 run;
 title;

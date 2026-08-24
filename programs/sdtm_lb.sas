@@ -21,7 +21,9 @@ data work.lb_mapped;
     set work.raw_lb;
     
     /* Pre-define lengths to prevent truncation */
-    length LBTESTCD $8 LBTEST $40 LBCAT $20 LBORRES $20 LBORRESU $20 LBSTRESC $20 LBSTRESU $20;
+    length STUDYID $8 DOMAIN $2 USUBJID $&usubjid_length.
+           LBTESTCD $8 LBTEST $40 LBCAT $20 LBORRES $20 LBORRESU $20
+           LBSTRESC $20 LBSTRESU $20;
     
     /* Core Identifiers */
     STUDYID = "CDISC-01";
