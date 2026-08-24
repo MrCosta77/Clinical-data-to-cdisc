@@ -69,6 +69,7 @@
 <ItemRef ItemOID="IT.ADSL.RFICDT" Mandatory="No"/>
 <ItemRef ItemOID="IT.ADSL.TRTSDT" Mandatory="No"/>
 <ItemRef ItemOID="IT.ADSL.TRTEDT" Mandatory="No"/>
+<ItemRef ItemOID="IT.ADSL.EOSDT" Mandatory="No" MethodOID="MT.ADSL.EOSDT"/>
 <ItemRef ItemOID="IT.ADSL.AGE" Mandatory="No" MethodOID="MT.ADSL.AGE"/>
 <ItemRef ItemOID="IT.ADSL.TRTDURD" Mandatory="No"/>
       </ItemGroupDef>
@@ -82,6 +83,7 @@
 <ItemRef ItemOID="IT.ADTTE.TRT01A" Mandatory="No"/>
 <ItemRef ItemOID="IT.ADTTE.TRTSDT" Mandatory="No"/>
 <ItemRef ItemOID="IT.ADTTE.TRTEDT" Mandatory="No"/>
+<ItemRef ItemOID="IT.ADTTE.EOSDT" Mandatory="No"/>
 <ItemRef ItemOID="IT.ADTTE.EVENTDT" Mandatory="No"/>
 <ItemRef ItemOID="IT.ADTTE.CNSR" Mandatory="No" MethodOID="MT.ADTTE.TTFAEV"/>
 <ItemRef ItemOID="IT.ADTTE.AVAL" Mandatory="No" MethodOID="MT.ADTTE.TTFAEV"/>
@@ -137,7 +139,7 @@
 <ItemRef ItemOID="IT.CM.USUBJID" Mandatory="No"/>
 <ItemRef ItemOID="IT.CM.CMSEQ" Mandatory="No"/>
 <ItemRef ItemOID="IT.CM.CMTRT" Mandatory="No"/>
-<ItemRef ItemOID="IT.CM.CMDECOD" Mandatory="No"/>
+<ItemRef ItemOID="IT.CM.CMDECOD" Mandatory="No" MethodOID="MT.CM.CMDECOD"/>
 <ItemRef ItemOID="IT.CM.CMDOSE" Mandatory="No"/>
 <ItemRef ItemOID="IT.CM.CMDOSU" Mandatory="No"/>
 <ItemRef ItemOID="IT.CM.CMSTDTC" Mandatory="No"/>
@@ -518,6 +520,12 @@
 <Description><TranslatedText>Derived from SDTM inputs and the versioned ADaM program.</TranslatedText></Description>
         </def:Origin>
       </ItemDef>
+<ItemDef OID="IT.ADSL.EOSDT" Name="EOSDT" DataType="date" Length="8">
+<Description><TranslatedText>EOSDT</TranslatedText></Description>
+<def:Origin Type="Derived">
+<Description><TranslatedText>Derived from SDTM inputs and the versioned ADaM program.</TranslatedText></Description>
+        </def:Origin>
+      </ItemDef>
 <ItemDef OID="IT.ADSL.ITTFL" Name="ITTFL" DataType="text" Length="1">
 <Description><TranslatedText>ITTFL</TranslatedText></Description>
 <CodeListRef CodeListOID="CL.YN"/>
@@ -615,6 +623,12 @@
 <ItemDef OID="IT.ADTTE.CNSR" Name="CNSR" DataType="integer" Length="8">
 <Description><TranslatedText>CNSR</TranslatedText></Description>
 <CodeListRef CodeListOID="CL.CNSR"/>
+<def:Origin Type="Derived">
+<Description><TranslatedText>Derived from SDTM inputs and the versioned ADaM program.</TranslatedText></Description>
+        </def:Origin>
+      </ItemDef>
+<ItemDef OID="IT.ADTTE.EOSDT" Name="EOSDT" DataType="date" Length="8">
+<Description><TranslatedText>EOSDT</TranslatedText></Description>
 <def:Origin Type="Derived">
 <Description><TranslatedText>Derived from SDTM inputs and the versioned ADaM program.</TranslatedText></Description>
         </def:Origin>
@@ -912,7 +926,7 @@
 <Description><TranslatedText>Derived from the source EDC extract by the versioned SDTM program.</TranslatedText></Description>
         </def:Origin>
       </ItemDef>
-<ItemDef OID="IT.CM.CMENRTPT" Name="CMENRTPT" DataType="text" Length="7">
+<ItemDef OID="IT.CM.CMENRTPT" Name="CMENRTPT" DataType="text" Length="8">
 <Description><TranslatedText>CMENRTPT</TranslatedText></Description>
 <def:Origin Type="Derived">
 <Description><TranslatedText>Derived from the source EDC extract by the versioned SDTM program.</TranslatedText></Description>
@@ -1528,17 +1542,19 @@
       <MethodDef OID="MT.DM.USUBJID" Name="Unique Subject Identifier" Type="Computation"><Description><TranslatedText>Concatenate STUDYID and SUBJID with a hyphen.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.DM.SITEID" Name="Site Identifier" Type="Computation"><Description><TranslatedText>Copy SITE from the raw demographic record after type-safe character conversion.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.DM.RACE" Name="Race Terminology Mapping" Type="Computation"><Description><TranslatedText>Map the EDC race label to the supported CDISC controlled term.</TranslatedText></Description></MethodDef>
+      <MethodDef OID="MT.CM.CMDECOD" Name="Medication Normalization" Type="Computation"><Description><TranslatedText>Normalize the approved Paracetamol source synonym to the standard ingredient name Acetaminophen; retain the uppercase source name for the remaining educational dictionary entries.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.ADSL.TRT01P" Name="Planned Treatment" Type="Computation"><Description><TranslatedText>Derive planned treatment from the randomized arm in DM.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.ADSL.TRT01A" Name="Actual Treatment" Type="Computation"><Description><TranslatedText>Derive actual treatment from the first exposure record in EX.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.ADSL.ITTFL" Name="Intent-to-Treat Flag" Type="Computation"><Description><TranslatedText>Set to Y for randomized subjects and N for screen failures.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.ADSL.SAFFL" Name="Safety Population Flag" Type="Computation"><Description><TranslatedText>Set to Y when at least one exposure start date is present.</TranslatedText></Description></MethodDef>
-      <MethodDef OID="MT.ADSL.AGE" Name="Age" Type="Computation"><Description><TranslatedText>Calculate completed approximate years between birth and informed consent using 365.25 days.</TranslatedText></Description></MethodDef>
+      <MethodDef OID="MT.ADSL.AGE" Name="Age" Type="Computation"><Description><TranslatedText>Calculate completed years between birth and informed consent using SAS YRDIF with the AGE basis.</TranslatedText></Description></MethodDef>
+      <MethodDef OID="MT.ADSL.EOSDT" Name="End of Subject Follow-up" Type="Computation"><Description><TranslatedText>Convert DM.RFPENDTC to a numeric SAS date for participant-specific follow-up and censoring.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.ADAE.TRTEMFL" Name="Treatment-Emergent Flag" Type="Computation"><Description><TranslatedText>Set to Y when a safety subject event starts on or after first dose.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.ADAE.AOCCFL" Name="First Treatment-Emergent Occurrence" Type="Computation"><Description><TranslatedText>Set to Y on the chronologically first treatment-emergent occurrence per subject and decoded term.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.ADVS.BASELINE" Name="Vital Signs Baseline and Change" Type="Computation"><Description><TranslatedText>Select the exact source record with the latest nonmissing value on or before treatment start; same-day ambiguity is rejected by QC when collection time is unavailable.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.ADLB.BASELINE" Name="Laboratory Baseline and Change" Type="Computation"><Description><TranslatedText>Select the exact source record with the latest nonmissing value on or before treatment start; same-day ambiguity is rejected by QC when collection time is unavailable.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.ADLB.LBNRIND" Name="Laboratory Range Indicator" Type="Computation"><Description><TranslatedText>Classify the standardized analysis value using the parameter-specific reference range.</TranslatedText></Description></MethodDef>
-      <MethodDef OID="MT.ADTTE.TTFAEV" Name="Time to First Adverse Event" Type="Computation"><Description><TranslatedText>Calculate inclusive days from treatment start to first event or censoring date and derive CNSR.</TranslatedText></Description></MethodDef>
+      <MethodDef OID="MT.ADTTE.TTFAEV" Name="Time to First Adverse Event" Type="Computation"><Description><TranslatedText>Calculate inclusive days from treatment start to the first treatment-emergent event; subjects without an event are censored at their participant-specific ADSL.EOSDT derived from DM.RFPENDTC.</TranslatedText></Description></MethodDef>
     </MetaDataVersion>
   </Study>
 </ODM>

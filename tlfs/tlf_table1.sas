@@ -5,10 +5,10 @@ Description:  Generates Table 1: Demographics and Baseline Characteristics.
 *******************************************************************************/
 
 /* 1. INITIALIZE MASTER CONFIGURATION */
-%include "/home/u64384931/Clinical-data-to-cdisc/programs/00_setup.sas";
+/* Execute through RUN_ALL.SAS, which initializes PROJECT_PATH and libraries. */
 
 /* Open ODS RTF destination with Journal style without closing SAS Studio output */
-ods rtf file="&project_path./tlf_table1.rtf" style=Journal;
+ods rtf file="&project_path./tlfs/tlf_table1.rtf" style=Journal;
 
 title1 "Table 1: Demographics and Baseline Characteristics";
 title2 "Population: Intent-to-Treat (ITT)";

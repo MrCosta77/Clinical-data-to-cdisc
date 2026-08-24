@@ -3,7 +3,7 @@ Program Name: sdtm_sv.sas
 Description:  Creates one SDTM SV record for each actual subject visit.
 *******************************************************************************/
 
-%include "/home/u64384931/Clinical-data-to-cdisc/programs/00_setup.sas";
+/* Execute through RUN_ALL.SAS, which initializes PROJECT_PATH and libraries. */
 
 proc import datafile="&project_path./data/raw/raw_vitals.csv"
     out=work.raw_sv dbms=csv replace;
@@ -42,7 +42,8 @@ data sdtm.sv;
     keep STUDYID DOMAIN USUBJID VISITNUM VISIT VISITDY SVSTDTC SVENDTC;
 run;
 
-proc sort data=sdtm.sv nodupkey;
+/* Sort without deleting records: duplicate keys must remain visible to QC. */
+proc sort data=sdtm.sv;
     by USUBJID VISITNUM;
 run;
 

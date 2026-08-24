@@ -3,7 +3,7 @@ Program Name: sdtm_ds.sas
 Description:  Creates the final study disposition for every subject.
 *******************************************************************************/
 
-%include "/home/u64384931/Clinical-data-to-cdisc/programs/00_setup.sas";
+/* Execute through RUN_ALL.SAS, which initializes PROJECT_PATH and libraries. */
 
 proc import datafile="&project_path./data/raw/raw_demog.csv"
     out=work.raw_ds dbms=csv replace;
@@ -34,7 +34,8 @@ data sdtm.ds;
     keep STUDYID DOMAIN USUBJID DSSEQ DSCAT DSSCAT DSTERM DSDECOD EPOCH DSSTDTC;
 run;
 
-proc sort data=sdtm.ds nodupkey;
+/* Sort without deleting records: duplicate keys must remain visible to QC. */
+proc sort data=sdtm.ds;
     by USUBJID DSSEQ;
 run;
 

@@ -6,7 +6,7 @@ Description:  Automated Quality Control (QC) Validation Framework.
               Generates a permanent audit dataset in the ADAM library.
 *******************************************************************************/
 
-%include "/home/u64384931/Clinical-data-to-cdisc/programs/00_setup.sas";
+/* Execute through RUN_ALL.SAS, which initializes PROJECT_PATH and libraries. */
 
 /* -------------------------------------------------------------------
    1. DEFINE VALIDATION RULES
@@ -98,13 +98,67 @@ proc sql noprint;
     where a.SAFFL = 'Y' and e.USUBJID is null;
 quit;
 
-/* RULE 11: ADTTE - Survival time (AVAL) cannot be negative */
+/* RULE 11: ADTTE - Survival time must be a positive inclusive day count */
 proc sql noprint;
     create table chk_adtte01 as
-    select 'ADTE-001' as CHECK_ID, 'ADTTE' as DOMAIN, 'Survival time (AVAL) >= 0' as RULE,
+    select 'ADTTE-001' as CHECK_ID, 'ADTTE' as DOMAIN, 'Survival time (AVAL) must be >= 1' as RULE,
            count(*) as N_FAIL
     from adam.adtte
-    where AVAL < 0 and not missing(AVAL); /* CORREÇÃO: Ignorar explicitamente missing values SAS (.) */
+    where missing(AVAL) or AVAL < 1;
+quit;
+
+/* ADTTE-002: Event and censoring records must use the documented formula. */
+proc sql noprint;
+    create table chk_adtte02 as
+    select 'ADTTE-002' as CHECK_ID, 'ADTTE' as DOMAIN,
+           'AVAL and CNSR agree with event or subject follow-up date' as RULE,
+           count(*) as N_FAIL
+    from adam.adtte
+    where missing(TRTSDT)
+       or missing(CNSR)
+       or CNSR not in (0, 1)
+       or (CNSR = 0 and (missing(EVENTDT) or AVAL ne (EVENTDT - TRTSDT) + 1))
+       or (CNSR = 1 and (not missing(EVENTDT) or missing(EOSDT)
+                         or AVAL ne (EOSDT - TRTSDT) + 1));
+quit;
+
+/* ADTTE-003: Analysis dates must remain inside individual follow-up. */
+proc sql noprint;
+    create table chk_adtte03 as
+    select 'ADTTE-003' as CHECK_ID, 'ADTTE' as DOMAIN,
+           'Event and follow-up dates must be chronologically valid' as RULE,
+           count(*) as N_FAIL
+    from adam.adtte
+    where missing(EOSDT)
+       or EOSDT < TRTSDT
+       or (not missing(EVENTDT) and
+           (EVENTDT < TRTSDT or EVENTDT > EOSDT));
+quit;
+
+/* ADSL-003: EOSDT must be the numeric representation of DM.RFPENDTC. */
+proc sql noprint;
+    create table chk_adsl03 as
+    select 'ADSL-003' as CHECK_ID, 'ADSL' as DOMAIN,
+           'EOSDT must agree with DM.RFPENDTC' as RULE,
+           count(*) as N_FAIL
+    from adam.adsl a
+    left join sdtm.dm d on a.USUBJID = d.USUBJID
+    where d.USUBJID is null
+       or missing(a.EOSDT)
+       or a.EOSDT ne input(substr(d.RFPENDTC, 1, 10), yymmdd10.);
+quit;
+
+/* ADSL-004: AGE must represent completed years at informed consent. */
+proc sql noprint;
+    create table chk_adsl04 as
+    select 'ADSL-004' as CHECK_ID, 'ADSL' as DOMAIN,
+           'AGE must equal completed years at informed consent' as RULE,
+           count(*) as N_FAIL
+    from adam.adsl
+    where missing(BRTHDT)
+       or missing(RFICDT)
+       or missing(AGE)
+       or AGE ne floor(yrdif(BRTHDT, RFICDT, 'AGE'));
 quit;
 
 /* ADVS-002: Selected baseline date must identify one source record.
@@ -360,6 +414,71 @@ proc sql noprint;
     );
 quit;
 
+/* RULE 30: CM must preserve subject integrity, required values and chronology. */
+proc sql noprint;
+    create table chk_cm01 as
+    select 'SDTM-022' as CHECK_ID, 'CM' as DOMAIN,
+           'CM subject, medication, dose and dates must be valid' as RULE,
+           count(*) as N_FAIL
+    from sdtm.cm c
+    left join sdtm.dm d on c.USUBJID = d.USUBJID
+    where d.USUBJID is null
+       or missing(c.CMTRT) or missing(c.CMDECOD)
+       or (upcase(strip(c.CMTRT)) = 'PARACETAMOL' and
+           upcase(strip(c.CMDECOD)) ne 'ACETAMINOPHEN')
+       or missing(c.CMDOSE) or missing(c.CMDOSU)
+       or missing(c.CMSTDTC)
+       or prxmatch('/^\d{4}-\d{2}-\d{2}$/', strip(c.CMSTDTC)) = 0
+       or (not missing(c.CMENDTC) and
+           prxmatch('/^\d{4}-\d{2}-\d{2}$/', strip(c.CMENDTC)) = 0)
+       or (not missing(c.CMENDTC) and c.CMENDTC < c.CMSTDTC)
+       or (c.CMENRTPT = 'ONGOING' and not missing(c.CMENDTC))
+       or (c.CMENRTPT ne 'ONGOING' and missing(c.CMENDTC));
+quit;
+
+/* RULE 31: DSDECOD must use the supported disposition terminology. */
+proc sql noprint;
+    create table chk_ds03 as
+    select 'SDTM-023' as CHECK_ID, 'DS' as DOMAIN,
+           'DSDECOD uses supported disposition terminology' as RULE,
+           count(*) as N_FAIL
+    from sdtm.ds
+    where upcase(strip(DSDECOD)) not in (
+        'COMPLETED', 'LOST TO FOLLOW-UP', 'WITHDRAWAL BY SUBJECT',
+        'ADVERSE EVENT', 'SCREEN FAILURE'
+    );
+quit;
+
+/* RULE 32: Sequence variables must be unique inside each subject/domain. */
+proc sql noprint;
+    create table chk_seq01 as
+    select 'SDTM-024' as CHECK_ID, 'SDTM' as DOMAIN,
+           'Domain sequence keys must be unique per subject' as RULE,
+           count(*) as N_FAIL
+    from (
+        select 'AE' as SOURCE, USUBJID, AESEQ as SEQ
+        from sdtm.ae group by USUBJID, AESEQ having count(*) > 1
+        union all
+        select 'EX', USUBJID, EXSEQ from sdtm.ex
+        group by USUBJID, EXSEQ having count(*) > 1
+        union all
+        select 'LB', USUBJID, LBSEQ from sdtm.lb
+        group by USUBJID, LBSEQ having count(*) > 1
+        union all
+        select 'VS', USUBJID, VSSEQ from sdtm.vs
+        group by USUBJID, VSSEQ having count(*) > 1
+        union all
+        select 'CM', USUBJID, CMSEQ from sdtm.cm
+        group by USUBJID, CMSEQ having count(*) > 1
+        union all
+        select 'MH', USUBJID, MHSEQ from sdtm.mh
+        group by USUBJID, MHSEQ having count(*) > 1
+        union all
+        select 'EG', USUBJID, EGSEQ from sdtm.eg
+        group by USUBJID, EGSEQ having count(*) > 1
+    );
+quit;
+
 
 /* -------------------------------------------------------------------
    2. CONSOLIDATE RESULTS (Generate Permanent Data)
@@ -370,11 +489,13 @@ data adam.qc_report;
     
     set chk_adsl01 chk_adae01 chk_advs01 chk_adlb01
         chk_advs02 chk_adlb02 chk_dm01
-        chk_ae01 chk_ex01 chk_lb01 chk_vs01 chk_adsl02 chk_adtte01
+        chk_ae01 chk_ex01 chk_lb01 chk_vs01 chk_adsl02 chk_adsl03 chk_adsl04
+        chk_adtte01 chk_adtte02 chk_adtte03
         chk_eg01 chk_eg02 chk_eg03 chk_eg04
         chk_mh01 chk_mh02 chk_mh03 chk_mh04 chk_dm02
         chk_sv01 chk_sv02 chk_sv03 chk_ds01 chk_ds02
-        chk_dm03 chk_dm04 chk_adae02 chk_adae03;
+        chk_dm03 chk_dm04 chk_adae02 chk_adae03
+        chk_cm01 chk_ds03 chk_seq01;
         
     if N_FAIL = 0 then STATUS = "PASS";
     else STATUS = "FAIL";

@@ -2,6 +2,12 @@
 *.log
 *.lst
 
+# Python environments and caches
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+
 # Local repository review tools
 flatten.py
 codigo_completo.txt

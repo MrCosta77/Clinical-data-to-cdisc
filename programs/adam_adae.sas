@@ -5,7 +5,7 @@ Description:  Derivation of ADAE (Adverse Events Analysis Dataset).
               study days (ASTDY), and Treatment-Emergent Flags (TRTEMFL).
 *******************************************************************************/
 
-%include "/home/u64384931/Clinical-data-to-cdisc/programs/00_setup.sas";
+/* Execute through RUN_ALL.SAS, which initializes PROJECT_PATH and libraries. */
 
 /* 1. SORT INPUT DATASETS BY UNIQUE SUBJECT ID */
 proc sort data=adam.adsl out=work.adsl_sorted;

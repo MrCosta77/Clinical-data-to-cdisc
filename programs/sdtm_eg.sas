@@ -2,7 +2,7 @@
 Program Name: sdtm_eg.sas
 Description:  Transforms raw ECG data into CDISC SDTM EG domain.
 *******************************************************************************/
-%include "/home/u64384931/Clinical-data-to-cdisc/programs/00_setup.sas";
+/* Execute through RUN_ALL.SAS, which initializes PROJECT_PATH and libraries. */
 
 proc import datafile="&project_path./data/raw/raw_ecg.csv" 
     out=work.raw_eg dbms=csv replace; 

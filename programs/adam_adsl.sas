@@ -5,7 +5,7 @@ Description:  Derivation of ADSL (Subject-Level Analysis Dataset).
               numeric analysis dates, and calculates age and treatment duration.
 *******************************************************************************/
 
-%include "/home/u64384931/Clinical-data-to-cdisc/programs/00_setup.sas";
+/* Execute through RUN_ALL.SAS, which initializes PROJECT_PATH and libraries. */
 
 /* 1. GET FIRST EXPOSURE RECORD PER SUBJECT */
 proc sort data=sdtm.ex out=work.ex_first;
@@ -66,22 +66,24 @@ data work.adsl_draft;
     if length(RFICDTC) >= 10 then RFICDT = input(substr(RFICDTC, 1, 10), yymmdd10.);
     if length(EXSTDTC) >= 10 then TRTSDT = input(substr(EXSTDTC, 1, 10), yymmdd10.);
     if length(EXENDTC) >= 10 then TRTEDT = input(substr(EXENDTC, 1, 10), yymmdd10.);
+    if length(RFPENDTC) >= 10 then EOSDT = input(substr(RFPENDTC, 1, 10), yymmdd10.);
 
-    format BRTHDT RFICDT TRTSDT TRTEDT date9.; /* Example: 05JAN2023 */
+    format BRTHDT RFICDT TRTSDT TRTEDT EOSDT date9.; /* Example: 05JAN2023 */
 
     /* --------------------------------------------------------
        CLINICAL MATH DERIVATIONS
        -------------------------------------------------------- */
-    /* 1. Calculate Numeric Age at Time of Informed Consent */
+    /* 1. Calculate completed age at informed consent.
+       YRDIF with the AGE basis handles birthdays and leap years. */
     if not missing(BRTHDT) and not missing(RFICDT) then
-        AGE = int((RFICDT - BRTHDT) / 365.25);
+        AGE = floor(yrdif(BRTHDT, RFICDT, 'AGE'));
 
     /* 2. Calculate Treatment Duration (Days) */
     if not missing(TRTSDT) and not missing(TRTEDT) then
         TRTDURD = (TRTEDT - TRTSDT) + 1; /* Inclusive of start day */
 
     keep STUDYID USUBJID SUBJID SITEID TRT01P TRT01A ITTFL SAFFL
-         BRTHDT RFICDT TRTSDT TRTEDT AGE TRTDURD SEX RACE;
+         BRTHDT RFICDT TRTSDT TRTEDT EOSDT AGE TRTDURD SEX RACE;
 run;
 
 

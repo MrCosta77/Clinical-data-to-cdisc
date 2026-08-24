@@ -2,7 +2,7 @@
 Program Name: sdtm_mh.sas
 Description:  Transforms raw Medical History data into CDISC SDTM MH domain.
 *******************************************************************************/
-%include "/home/u64384931/Clinical-data-to-cdisc/programs/00_setup.sas";
+/* Execute through RUN_ALL.SAS, which initializes PROJECT_PATH and libraries. */
 
 proc import datafile="&project_path./data/raw/raw_mh.csv" 
     out=work.raw_mh dbms=csv replace; 

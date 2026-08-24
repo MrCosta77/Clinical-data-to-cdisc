@@ -4,7 +4,7 @@ Description:  Mapping of raw EDC data to the SDTM VS (Vital Signs) domain.
               Demonstrates horizontal-to-vertical unpivoting and unit mapping.
 *******************************************************************************/
 
-%include "/home/u64384931/Clinical-data-to-cdisc/programs/00_setup.sas";
+/* Execute through RUN_ALL.SAS, which initializes PROJECT_PATH and libraries. */
 
 /* 1. IMPORT RAW VITALS */
 proc import datafile="&project_path./data/raw/raw_vitals.csv"

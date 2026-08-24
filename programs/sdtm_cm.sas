@@ -5,7 +5,7 @@ Description:  Creates SDTM Concomitant Medications (CM) domain.
 *******************************************************************************/
 
 /* 1. INITIALIZE MASTER CONFIGURATION */
-%include "/home/u64384931/Clinical-data-to-cdisc/programs/00_setup.sas";
+/* Execute through RUN_ALL.SAS, which initializes PROJECT_PATH and libraries. */
 
 /* 2. IMPORT RAW DATA (Defensive Programming: Bypassing PROC IMPORT) */
 data work.raw_cm;
@@ -19,7 +19,8 @@ run;
 
 /* 3. PROCESS AND MAP TO SDTM */
 data work.cm_draft;
-    length STUDYID $8 DOMAIN $2 USUBJID $&usubjid_length.;
+    length STUDYID $8 DOMAIN $2 USUBJID $&usubjid_length.
+           CMTRT CMDECOD $50 CMDOSU $20 CMSTDTC CMENDTC $10 CMENRTPT $8;
     set work.raw_cm;
     
     /* Identifiers */
@@ -27,9 +28,13 @@ data work.cm_draft;
     DOMAIN  = "CM";
     USUBJID = strip(STUDYID) || "-" || strip(SUBJECT);
     
-    /* Medication Mapping */
+    /* Educational medication normalization. The approved Paracetamol source
+       synonym is represented by the standard US ingredient name. */
     CMTRT = strip(MEDICATION);
-    CMDECOD = upcase(CMTRT); /* Mocking standard dictionary coding (e.g., WHODrug) */
+    select (upcase(CMTRT));
+        when ('PARACETAMOL') CMDECOD = 'ACETAMINOPHEN';
+        otherwise CMDECOD = upcase(CMTRT);
+    end;
     
     /* Dose and Unit parsing */
     CMDOSE = input(scan(DOSE, 1, ' '), best.);

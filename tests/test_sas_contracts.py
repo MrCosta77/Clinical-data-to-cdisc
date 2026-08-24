@@ -34,18 +34,82 @@ def test_adae_derives_first_treatment_emergent_occurrence():
     assert "by USUBJID AEDECOD _occ_order AESTDT AESEQ" in source
 
 
+def test_cm_applies_the_approved_medication_normalization():
+    source = _source("programs/sdtm_cm.sas")
+    define = _source("programs/generate_define.sas")
+    qc = _source("qc/qc_core.sas")
+    assert "CMTRT CMDECOD $50" in source
+    assert "when ('PARACETAMOL') CMDECOD = 'ACETAMINOPHEN'" in source
+    assert "MT.CM.CMDECOD" in define
+    assert "ACETAMINOPHEN" in qc
+
+
 def test_qc_covers_new_semantic_contracts():
     source = _source("qc/qc_core.sas")
     for check_id in (
         "SDTM-020", "SDTM-021", "ADAE-002", "ADAE-003",
-        "ADVS-002", "ADLB-002",
+        "ADVS-002", "ADLB-002", "ADSL-003", "ADSL-004", "ADTTE-001",
+        "ADTTE-002", "ADTTE-003", "SDTM-022", "SDTM-023", "SDTM-024",
     ):
         assert check_id in source
     assert "Baseline date has exactly one eligible source record" in source
     assert "ALL &n_checks CHECKS PASSED" in source
     check_ids = re.findall(r"select '([^']+)' as CHECK_ID", source)
-    assert len(check_ids) == 31
-    assert len(set(check_ids)) == 31
+    assert len(check_ids) == 38
+    assert len(set(check_ids)) == 38
+
+
+def test_adtte_uses_participant_specific_follow_up():
+    adsl = _source("programs/adam_adsl.sas")
+    adtte = _source("programs/adam_adtte.sas")
+    assert "RFPENDTC" in adsl
+    assert "EOSDT = input" in adsl
+    assert "(EOSDT - TRTSDT) + 1" in adtte
+    assert "study_cutoff" not in adtte
+    assert "if AVAL < 0 then AVAL = 0" not in adtte
+
+
+def test_age_uses_completed_years():
+    adsl = _source("programs/adam_adsl.sas")
+    define = _source("programs/generate_define.sas")
+    assert "floor(yrdif(BRTHDT, RFICDT, 'AGE'))" in adsl
+    assert "YRDIF with the AGE basis" in define
+
+
+def test_outputs_stay_in_tlfs_and_source_duplicates_are_not_deleted():
+    for name in ("tlf_table1", "tlf_figure1"):
+        source = _source(f"tlfs/{name}.sas")
+        assert f'&project_path./tlfs/{name}.rtf' in source
+
+    for domain in ("sv", "ds"):
+        source = _source(f"programs/sdtm_{domain}.sas").lower()
+        assert "nodupkey" not in source
+
+
+def test_sas_programs_do_not_embed_a_personal_setup_path():
+    sas_files = list((PROJECT_ROOT / "programs").glob("*.sas"))
+    sas_files += list((PROJECT_ROOT / "qc").glob("*.sas"))
+    sas_files += list((PROJECT_ROOT / "tlfs").glob("*.sas"))
+    for sas_file in sas_files:
+        source = sas_file.read_text(encoding="utf-8")
+        assert "/home/u64384931/" not in source, sas_file
+
+    run_all = _source("run_all.sas")
+    assert '%include "&project_path./programs/00_setup.sas";' in run_all
+    assert '%include "&project_path./qc/qc_core.sas";' in run_all
+
+    expected_order = (
+        "sdtm_dm", "sdtm_ae", "sdtm_ex", "sdtm_lb", "sdtm_vs",
+        "sdtm_cm", "sdtm_mh", "sdtm_eg", "sdtm_sv", "sdtm_ds",
+        "adam_adsl", "adam_adae", "adam_advs", "adam_adlb", "adam_adtte",
+    )
+    positions = [
+        run_all.index(f'programs/{program}.sas')
+        for program in expected_order
+    ]
+    assert positions == sorted(positions)
+    for program in expected_order:
+        assert run_all.count(f'programs/{program}.sas') == 1
 
 
 def test_define_generator_emits_semantic_metadata():

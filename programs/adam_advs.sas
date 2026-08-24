@@ -5,7 +5,7 @@ Description:  Derivation of ADVS (Vital Signs Analysis Dataset).
               Baseline Values (BASE), and Change from Baseline (CHG).
 *******************************************************************************/
 
-%include "/home/u64384931/Clinical-data-to-cdisc/programs/00_setup.sas";
+/* Execute through RUN_ALL.SAS, which initializes PROJECT_PATH and libraries. */
 
 /* 1. MERGE ADSL AND VS */
 proc sort data=adam.adsl out=work.adsl_sorted;

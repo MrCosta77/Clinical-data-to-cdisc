@@ -5,7 +5,7 @@ Description:  Mapping of raw EDC data to the SDTM AE (Adverse Events) domain.
               mapping placeholders, and handling of ongoing clinical events.
 *******************************************************************************/
 
-%include "/home/u64384931/Clinical-data-to-cdisc/programs/00_setup.sas";
+/* Execute through RUN_ALL.SAS, which initializes PROJECT_PATH and libraries. */
 
 /* 1. IMPORT RAW ADVERSE EVENTS */
 proc import datafile="&project_path./data/raw/raw_ae.csv"

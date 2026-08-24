@@ -4,7 +4,7 @@ Description:  Mapping of raw EDC data to the SDTM EX (Exposure) domain.
               Captures study drug administration, doses, and duration.
 *******************************************************************************/
 
-%include "/home/u64384931/Clinical-data-to-cdisc/programs/00_setup.sas";
+/* Execute through RUN_ALL.SAS, which initializes PROJECT_PATH and libraries. */
 
 /* 1. IMPORT RAW EXPOSURE DATA */
 proc import datafile="&project_path./data/raw/raw_exposure.csv"

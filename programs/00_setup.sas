@@ -5,12 +5,24 @@ Description:  Master configuration file. Defines global macro variables
 *******************************************************************************/
 
 /* =====================================================================
-   INSTRUCTIONS FOR REVIEWERS/USERS: 
-   Update the macro variable below with the absolute path to your cloned 
-   repository in your SAS environment (e.g., SAS OnDemand, SAS Studio).
+   INSTRUCTIONS FOR REVIEWERS/USERS:
+   Define PROJECT_PATH before including this file. The supported entry point
+   is RUN_ALL.SAS, where the repository path is configured once.
    ===================================================================== */
 
-%let project_path = /home/u64384931/Clinical-data-to-cdisc;
+%macro validate_project_path;
+    %if not %symexist(project_path) %then %do;
+        %put ERROR: PROJECT_PATH is not defined.;
+        %put ERROR: Configure PROJECT_PATH in RUN_ALL.SAS and execute that program.;
+        %abort cancel;
+    %end;
+    %else %if not %sysfunc(fileexist(&project_path./programs/00_setup.sas)) %then %do;
+        %put ERROR: PROJECT_PATH does not point to the repository root: &project_path.;
+        %abort cancel;
+    %end;
+%mend;
+
+%validate_project_path;
 %let usubjid_length = 40;
 
 /* Initialize SAS Libraries */

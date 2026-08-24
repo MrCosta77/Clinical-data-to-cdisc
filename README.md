@@ -10,7 +10,7 @@ This project is designed to showcase clinical data engineering, defensive SAS pr
 * **Advanced Derivations:** Complex logic for ongoing clinical events, baseline flagging (`ABLFL`), and temporal treatment-emergent derivations (`TRTEMFL`).
 
 ## 📂 Target Architecture
-The pipeline follows a rule-based clinical data transformation approach, culminating in survival analysis modeling and regulatory-grade presentation layers:
+The pipeline follows a rule-based clinical data transformation approach, culminating in survival analysis modeling and portfolio-style presentation layers:
 
 RAW EDC ──▶ SDTM (DM, AE, EX, LB, VS, CM, MH, EG, SV, DS) ──▶ ADaM (ADSL, ADAE, ADVS, ADLB, ADTTE) ──▶ QC Framework ──▶ TLFs & Define-XML
 
@@ -30,21 +30,30 @@ RAW EDC ──▶ SDTM (DM, AE, EX, LB, VS, CM, MH, EG, SV, DS) ──▶ ADaM (
 - **ADVS (Vital Signs):** Exact source-record Baseline derivations (`ABLFL`) with `SRCSEQ` traceability, Change from Baseline calculations, and a QC gate for same-day ambiguity when collection time is unavailable.
 - **ADAE (Adverse Events):** Treatment-emergent classification (`TRTEMFL`) and the first treatment-emergent occurrence per subject and decoded term (`AOCCFL`).
 - **ADLB (Laboratory Analysis):** Exact source-record Baseline derivations with ambiguity controls, plus biochemical logic including on-the-fly SI unit conversions (e.g., Glucose mg/dL to mmol/L) and clinical abnormality indicators (`LBNRIND`).
-- **ADTTE (Time-to-Event):** Survival analysis dataset modeling, calculating Time to First Adverse Event and applying mathematical right-censoring (`CNSR`) using study cutoff dates.
+- **ADTTE (Time-to-Event):** Survival analysis dataset modeling, calculating Time to First Adverse Event and applying mathematical right-censoring (`CNSR`) at each participant's end of follow-up (`EOSDT`, derived from `DM.RFPENDTC`).
 
 ### Phase 3: Quality Control & TLFs
 - **QC Framework:** Automated `PROC SQL` validation scripts to detect duplicate baselines, chronological anomalies, and referential integrity issues across domains. The pipeline triggers an `ABORT CANCEL` if critical data errors are detected.
-- **TLFs (Tables, Listings, Figures):** Generation of regulatory-grade RTF outputs using ODS.
+- **TLFs (Tables, Listings, Figures):** Generation of portfolio-style RTF outputs using ODS.
   - **Table 1:** Demographics and Baseline Characteristics (Intent-to-Treat population) using `PROC TABULATE`.
-  - **Figure 1:** Kaplan-Meier Survival Curve estimating adverse event probabilities over time using `PROC LIFETEST`.
+  - **Figure 1:** Kaplan-Meier curve estimating the probability of remaining free of a first treatment-emergent adverse event over time using `PROC LIFETEST`.
 - **Define-XML v2.0:** Dynamic extraction of metadata using SAS dictionary tables, enriched with controlled terminology (`CodeList`), variable origins, explicit derivation methods (`MethodDef`), and format-aware `text`, `date`, `datetime`, `time`, `integer`, and `float` types. The output remains an educational metadata prototype rather than a submission-ready Define-XML package.
+
+### Validation scope
+
+The versioned Python contracts and SAS QC rules demonstrate internal consistency,
+traceability, and reproducibility for the synthetic cohort. They do not replace a
+formal CDISC submission validation. The terminology dictionaries are educational
+substitutes for licensed MedDRA/WHODrug content, the generated Define-XML is a
+structural metadata prototype, and no claim of regulatory acceptance is made
+without validation in an appropriate external tool such as Pinnacle 21.
 
 ## ⚙️ How to Reproduce this Pipeline
 
 To run this project locally or in SAS OnDemand for Academics (SODA):
 
 1. **Clone the repository:**
-   `git clone https://github.com/your-username/Clinical-data-to-cdisc.git`
+   `git clone https://github.com/MrCosta77/Clinical-data-to-cdisc.git`
 
 2. **Generate the Raw Data:**
    Run both Python generators in order. Their fixed random seeds reproduce the
@@ -59,16 +68,26 @@ To run this project locally or in SAS OnDemand for Academics (SODA):
    `python scripts/validate_raw_contracts.py`
    `python -m pytest -v`
 
-3. **Configure the SAS Environment:**
+3. **Configure and execute the SAS pipeline:**
    * Upload the repository to your SAS environment.
-   * Open `programs/00_setup.sas`.
-   * Modify the `%let project_path = ...` variable to match your root directory.
-   * Run `00_setup.sas` to initialize the global libraries (`raw`, `sdtm`, `adam`).
+   * Open `run_all.sas` and modify its single `%let project_path = ...` value.
+   * Run `run_all.sas`. It initializes the libraries and executes the complete
+     dependency chain. Individual programs intentionally contain no personal
+     filesystem paths.
 
-4. **Execute the Pipeline (Strict Execution Order):**
+4. **Pipeline order used by `run_all.sas`:**
    In clinical programming, the ETL flow relies on strict hierarchical dependencies. You must execute the SAS programs in this exact order:
    * **Phase 1 (Raw to SDTM):** Run `sdtm_dm.sas`, then the remaining `sdtm_*.sas` programs, including `sdtm_sv.sas` and `sdtm_ds.sas`.
    * **Phase 2 (Core ADaM):** Run `adam_adsl.sas`. *(Crucial: This generates the Safety/ITT populations and treatment dates needed by all subsequent domains).*
    * **Phase 3 (Analysis Domains):** Run `adam_adae.sas`, `adam_advs.sas`, and `adam_adlb.sas`.
    * **Phase 4 (Survival Analysis):** Run `adam_adtte.sas`. *(Note: This explicitly depends on the derived ADAE dataset).*
-   * **Phase 5 (Reporting & Validation):** Run `tlf_table1.sas`, `tlf_figure1.sas`, `qc_core.sas` (31 checks), and finally `generate_define.sas` to output the XML metadata dictionary.
+   * **Phase 5 (Validation & Reporting):** Run `qc_core.sas` (38 checks), then `tlf_table1.sas`, `tlf_figure1.sas`, and finally `generate_define.sas` to output the XML metadata dictionary.
+
+### Current data-model scope
+
+The synthetic protocol contains at most one summarized EX record per treated
+participant, and the raw acceptance contract enforces that key. Consequently,
+ADSL derives first and last treatment dates from that summarized record. A study
+with multiple dosing records, treatment periods, interruptions, or dose changes
+would require a period-aware exposure derivation rather than reuse of this
+simplified rule.
