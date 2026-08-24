@@ -27,6 +27,7 @@ RAW EDC ──▶ SDTM (DM, AE, EX, LB, VS, CM, MH, EG, SV, DS) ──▶ ADaM (
 ### Phase 2: ADaM Derivation & Clinical Logic
 - **ADSL (Subject-Level):** Numeric analysis dates, demographic math (AGE), Treatment Duration, and Population Flags (ITTFL, SAFFL).
   - *Note on Misallocation:* The synthetic generator deliberately introduces treatment deviations (~5%) to realistically demonstrate complex derivations between the Intent-to-Treat (ITT) and Safety populations.
+  - *Screening Data:* Screening assessments such as vital signs are retained for screen failures because they were genuinely collected. EX contains only dosed participants, while ADSL population flags (`ITTFL` and `SAFFL`) control their inclusion in the corresponding analyses.
 - **ADVS (Vital Signs):** Exact source-record Baseline derivations (`ABLFL`) with `SRCSEQ` traceability, Change from Baseline calculations, and a QC gate for same-day ambiguity when collection time is unavailable.
 - **ADAE (Adverse Events):** Treatment-emergent classification (`TRTEMFL`) and the first treatment-emergent occurrence per subject and decoded term (`AOCCFL`).
 - **ADLB (Laboratory Analysis):** Exact source-record Baseline derivations with ambiguity controls, plus biochemical logic including on-the-fly SI unit conversions (e.g., Glucose mg/dL to mmol/L) and clinical abnormality indicators (`LBNRIND`).
