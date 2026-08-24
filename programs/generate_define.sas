@@ -12,7 +12,7 @@ proc sql noprint;
     select upcase(libname) as libname, 
            upcase(memname) as dataset, 
            upcase(name) as variable, 
-           type, length, label, varnum
+           type, length, format, label, varnum
     from dictionary.columns
     where libname in ('SDTM', 'ADAM')
     order by libname, dataset, varnum;
@@ -130,14 +130,26 @@ data _null_;
     file "&project_path./tlfs/define.xml" mod encoding="utf-8";
     
     length ds_name $32 var_name $32 var_lbl $256 dt_type $10 len_str $5
+           fmt_name $49
            line $1024;
     ds_name = strip(dataset);
     var_name = strip(variable);
     var_lbl = strip(label);
     if missing(var_lbl) then var_lbl = var_name; /* Fallback caso não tenha label */
     
+    fmt_name = upcase(strip(format));
     if type = 'char' then dt_type = 'text';
-    else dt_type = 'integer';
+    else if prxmatch('/DATETIME|E8601DT|B8601DT/', fmt_name) then
+        dt_type = 'datetime';
+    else if prxmatch('/DATE|YYMMDD|MMDDYY|DDMMYY|E8601DA|B8601DA/', fmt_name) then
+        dt_type = 'date';
+    else if prxmatch('/TIME|E8601TM|B8601TM/', fmt_name) then
+        dt_type = 'time';
+    else if variable in ('AGE', 'CNSR', 'N_FAIL', 'TRTDURD')
+         or prxmatch('/SEQ$/', strip(variable))
+         or prxmatch('/DY$/', strip(variable)) then
+        dt_type = 'integer';
+    else dt_type = 'float';
     
     len_str = strip(put(length, best.));
     
@@ -217,8 +229,8 @@ data _null_;
     put '      <MethodDef OID="MT.ADSL.AGE" Name="Age" Type="Computation"><Description><TranslatedText>Calculate completed approximate years between birth and informed consent using 365.25 days.</TranslatedText></Description></MethodDef>';
     put '      <MethodDef OID="MT.ADAE.TRTEMFL" Name="Treatment-Emergent Flag" Type="Computation"><Description><TranslatedText>Set to Y when a safety subject event starts on or after first dose.</TranslatedText></Description></MethodDef>';
     put '      <MethodDef OID="MT.ADAE.AOCCFL" Name="First Treatment-Emergent Occurrence" Type="Computation"><Description><TranslatedText>Set to Y on the chronologically first treatment-emergent occurrence per subject and decoded term.</TranslatedText></Description></MethodDef>';
-    put '      <MethodDef OID="MT.ADVS.BASELINE" Name="Vital Signs Baseline and Change" Type="Computation"><Description><TranslatedText>Select the last nonmissing value on or before treatment start; derive ABLFL, BASE and CHG.</TranslatedText></Description></MethodDef>';
-    put '      <MethodDef OID="MT.ADLB.BASELINE" Name="Laboratory Baseline and Change" Type="Computation"><Description><TranslatedText>Select the last nonmissing value on or before treatment start; derive ABLFL, BASE and CHG.</TranslatedText></Description></MethodDef>';
+    put '      <MethodDef OID="MT.ADVS.BASELINE" Name="Vital Signs Baseline and Change" Type="Computation"><Description><TranslatedText>Select the exact source record with the latest nonmissing value on or before treatment start; same-day ambiguity is rejected by QC when collection time is unavailable.</TranslatedText></Description></MethodDef>';
+    put '      <MethodDef OID="MT.ADLB.BASELINE" Name="Laboratory Baseline and Change" Type="Computation"><Description><TranslatedText>Select the exact source record with the latest nonmissing value on or before treatment start; same-day ambiguity is rejected by QC when collection time is unavailable.</TranslatedText></Description></MethodDef>';
     put '      <MethodDef OID="MT.ADLB.LBNRIND" Name="Laboratory Range Indicator" Type="Computation"><Description><TranslatedText>Classify the standardized analysis value using the parameter-specific reference range.</TranslatedText></Description></MethodDef>';
     put '      <MethodDef OID="MT.ADTTE.TTFAEV" Name="Time to First Adverse Event" Type="Computation"><Description><TranslatedText>Calculate inclusive days from treatment start to first event or censoring date and derive CNSR.</TranslatedText></Description></MethodDef>';
 run;

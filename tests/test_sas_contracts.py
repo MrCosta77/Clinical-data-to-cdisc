@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 
@@ -35,9 +36,16 @@ def test_adae_derives_first_treatment_emergent_occurrence():
 
 def test_qc_covers_new_semantic_contracts():
     source = _source("qc/qc_core.sas")
-    for check_id in ("SDTM-020", "SDTM-021", "ADAE-002", "ADAE-003"):
+    for check_id in (
+        "SDTM-020", "SDTM-021", "ADAE-002", "ADAE-003",
+        "ADVS-002", "ADLB-002",
+    ):
         assert check_id in source
+    assert "Baseline date has exactly one eligible source record" in source
     assert "ALL &n_checks CHECKS PASSED" in source
+    check_ids = re.findall(r"select '([^']+)' as CHECK_ID", source)
+    assert len(check_ids) == 31
+    assert len(set(check_ids)) == 31
 
 
 def test_define_generator_emits_semantic_metadata():
@@ -47,3 +55,21 @@ def test_define_generator_emits_semantic_metadata():
     assert 'MethodOID="' in source
     assert '<CodeList OID="CL.RACE"' in source
     assert '<MethodDef OID="MT.ADAE.AOCCFL"' in source
+    assert "same-day ambiguity is rejected by QC" in source
+    assert "type, length, format, label, varnum" in source
+    assert "dt_type = 'datetime'" in source
+    assert "dt_type = 'date'" in source
+    assert "dt_type = 'float'" in source
+
+
+def test_adam_baselines_retain_source_traceability_and_exact_flag_key():
+    for dataset, domain, sequence in (
+        ("advs", "VS", "VSSEQ"),
+        ("adlb", "LB", "LBSEQ"),
+    ):
+        source = _source(f"programs/adam_{dataset}.sas")
+        assert f"SRCDOM  = '{domain}'" in source
+        assert f"SRCVAR  = '{sequence}'" in source
+        assert f"SRCSEQ  = {sequence}" in source
+        assert "if SRCSEQ = BASE_SEQ then ABLFL = 'Y'" in source
+        assert "drop BASE_DT BASE_SEQ" in source or "drop _calc_val BASE_DT BASE_SEQ" in source

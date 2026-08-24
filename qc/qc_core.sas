@@ -107,6 +107,55 @@ proc sql noprint;
     where AVAL < 0 and not missing(AVAL); /* CORREÇÃO: Ignorar explicitamente missing values SAS (.) */
 quit;
 
+/* ADVS-002: Selected baseline date must identify one source record.
+   More than one same-day candidate cannot be resolved without collection time. */
+proc sql noprint;
+    create table chk_advs02 as
+    select 'ADVS-002' as CHECK_ID, 'ADVS' as DOMAIN,
+           'Baseline date has exactly one eligible source record' as RULE,
+           count(*) as N_FAIL
+    from (
+        select a.USUBJID, a.PARAMCD
+        from adam.advs a
+        inner join (
+            select USUBJID, PARAMCD, max(ASTDT) as BASE_DT
+            from adam.advs
+            where ASTDT <= TRTSDT and not missing(AVAL)
+            group by USUBJID, PARAMCD
+        ) b
+          on a.USUBJID = b.USUBJID
+         and a.PARAMCD = b.PARAMCD
+         and a.ASTDT = b.BASE_DT
+        where not missing(a.AVAL)
+        group by a.USUBJID, a.PARAMCD
+        having count(*) > 1
+    );
+quit;
+
+/* ADLB-002: Selected baseline date must identify one source record. */
+proc sql noprint;
+    create table chk_adlb02 as
+    select 'ADLB-002' as CHECK_ID, 'ADLB' as DOMAIN,
+           'Baseline date has exactly one eligible source record' as RULE,
+           count(*) as N_FAIL
+    from (
+        select a.USUBJID, a.PARAMCD
+        from adam.adlb a
+        inner join (
+            select USUBJID, PARAMCD, max(ASTDT) as BASE_DT
+            from adam.adlb
+            where ASTDT <= TRTSDT and not missing(AVAL)
+            group by USUBJID, PARAMCD
+        ) b
+          on a.USUBJID = b.USUBJID
+         and a.PARAMCD = b.PARAMCD
+         and a.ASTDT = b.BASE_DT
+        where not missing(a.AVAL)
+        group by a.USUBJID, a.PARAMCD
+        having count(*) > 1
+    );
+quit;
+
 /* RULE 12: SDTM EG - Referential Integrity */
 proc sql noprint;
     create table chk_eg01 as
@@ -319,7 +368,8 @@ data adam.qc_report;
     /* CORREÇÃO: Definir limites de texto ANTES do set previne os "Warnings" de truncation */
     length CHECK_ID $10 DOMAIN $10 RULE $70 STATUS $10;
     
-    set chk_adsl01 chk_adae01 chk_advs01 chk_adlb01 chk_dm01 
+    set chk_adsl01 chk_adae01 chk_advs01 chk_adlb01
+        chk_advs02 chk_adlb02 chk_dm01
         chk_ae01 chk_ex01 chk_lb01 chk_vs01 chk_adsl02 chk_adtte01
         chk_eg01 chk_eg02 chk_eg03 chk_eg04
         chk_mh01 chk_mh02 chk_mh03 chk_mh04 chk_dm02

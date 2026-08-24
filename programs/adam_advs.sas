@@ -29,6 +29,10 @@ data work.advs_draft;
     PARAM   = VSTEST;
     AVAL    = VSSTRESN;
     AVISIT  = VISIT;
+    AVISITN = VISITNUM;
+    SRCDOM  = 'VS';
+    SRCVAR  = 'VSSEQ';
+    SRCSEQ  = VSSEQ;
 
     /* Convert ISO Date to Numeric Analysis Date */
     if length(VSDTC) >= 10 then ASTDT = input(substr(VSDTC, 1, 10), yymmdd10.);
@@ -40,13 +44,14 @@ data work.advs_draft;
         else ASTDY = ASTDT - TRTSDT;
     end;
 
-    keep STUDYID USUBJID TRT01A TRTSDT TRTEDT PARAMCD PARAM AVAL AVISIT ASTDT ASTDY;
+    keep STUDYID USUBJID TRT01A TRTSDT TRTEDT PARAMCD PARAM AVAL
+         AVISIT AVISITN ASTDT ASTDY SRCDOM SRCVAR SRCSEQ;
 run;
 
 
 /* 2. IDENTIFY BASELINE RECORD */
 proc sort data=work.advs_draft out=work.advs_base_candidates;
-    by USUBJID PARAMCD ASTDT;
+    by USUBJID PARAMCD ASTDT AVISITN SRCSEQ;
     where ASTDT <= TRTSDT and not missing(AVAL);
 run;
 
@@ -56,10 +61,11 @@ data work.base_flags;
     
     if last.PARAMCD then do;
         BASE = AVAL;
-        BASE_DT = ASTDT; /* Guardar a data exata da linha de base */
+        BASE_DT = ASTDT;
+        BASE_SEQ = SRCSEQ;
         output;
     end;
-    keep USUBJID PARAMCD BASE BASE_DT;
+    keep USUBJID PARAMCD BASE BASE_DT BASE_SEQ;
 run;
 
 
@@ -74,8 +80,8 @@ data adam.advs;
     by USUBJID PARAMCD;
     if a;
 
-    /* 1. Atribuir ABLFL apenas à visita correspondente */
-    if ASTDT = BASE_DT then ABLFL = 'Y';
+    /* Flag the exact source record; the QC gate rejects same-day ambiguity. */
+    if SRCSEQ = BASE_SEQ then ABLFL = 'Y';
     else ABLFL = '';
 
     /* 2. Calculate Change from Baseline */
@@ -83,7 +89,7 @@ data adam.advs;
         CHG = AVAL - BASE;
     end;
     
-    drop BASE_DT;
+    drop BASE_DT BASE_SEQ;
 run;
 
 /* Re-sort for final presentation */

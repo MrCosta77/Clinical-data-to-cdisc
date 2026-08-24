@@ -30,6 +30,10 @@ data work.adlb_draft;
     PARAM   = LBTEST;
     AVAL    = LBSTRESN;
     AVISIT  = VISIT;
+    AVISITN = VISITNUM;
+    SRCDOM  = 'LB';
+    SRCVAR  = 'LBSEQ';
+    SRCSEQ  = LBSEQ;
 
     /* Convert ISO Date to Numeric Analysis Date */
     if length(LBDTC) >= 10 then ASTDT = input(substr(LBDTC, 1, 10), yymmdd10.);
@@ -41,13 +45,14 @@ data work.adlb_draft;
         else ASTDY = ASTDT - TRTSDT;
     end;
 
-    keep STUDYID USUBJID TRT01A TRTSDT TRTEDT PARAMCD PARAM AVAL AVISIT ASTDT ASTDY LBSTRESU;
+    keep STUDYID USUBJID TRT01A TRTSDT TRTEDT PARAMCD PARAM AVAL
+         AVISIT AVISITN ASTDT ASTDY LBSTRESU SRCDOM SRCVAR SRCSEQ;
 run;
 
 
 /* 2. IDENTIFY BASELINE RECORD */
 proc sort data=work.adlb_draft out=work.adlb_base_candidates;
-    by USUBJID PARAMCD ASTDT;
+    by USUBJID PARAMCD ASTDT AVISITN SRCSEQ;
     where ASTDT <= TRTSDT and not missing(AVAL);
 run;
 
@@ -57,10 +62,11 @@ data work.base_flags;
     
     if last.PARAMCD then do;
         BASE = AVAL;
-        BASE_DT = ASTDT; 
+        BASE_DT = ASTDT;
+        BASE_SEQ = SRCSEQ;
         output;
     end;
-    keep USUBJID PARAMCD BASE BASE_DT;
+    keep USUBJID PARAMCD BASE BASE_DT BASE_SEQ;
 run;
 
 
@@ -76,8 +82,8 @@ data adam.adlb;
     by USUBJID PARAMCD;
     if a;
 
-    /* Atribuir ABLFL apenas à visita correspondente */
-    if ASTDT = BASE_DT then ABLFL = 'Y';
+    /* Flag the exact source record; the QC gate rejects same-day ambiguity. */
+    if SRCSEQ = BASE_SEQ then ABLFL = 'Y';
     else ABLFL = '';
 
     /* Calculate Change from Baseline */
@@ -117,7 +123,7 @@ data adam.adlb;
             otherwise LBNRIND = 'UNKNOWN'; /* Para ALT e AST, omitimos nesta prova de conceito */
         end;
     end;
-    drop _calc_val;
+    drop _calc_val BASE_DT BASE_SEQ;
     
 run;
 

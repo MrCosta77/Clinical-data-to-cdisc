@@ -27,9 +27,9 @@ RAW EDC ──▶ SDTM (DM, AE, EX, LB, VS, CM, MH, EG, SV, DS) ──▶ ADaM (
 ### Phase 2: ADaM Derivation & Clinical Logic
 - **ADSL (Subject-Level):** Numeric analysis dates, demographic math (AGE), Treatment Duration, and Population Flags (ITTFL, SAFFL).
   - *Note on Misallocation:* The synthetic generator deliberately introduces treatment deviations (~5%) to realistically demonstrate complex derivations between the Intent-to-Treat (ITT) and Safety populations.
-- **ADVS (Vital Signs):** Advanced Baseline derivations (`ABLFL`) resolving retained PDV memory, and Change from Baseline calculations.
+- **ADVS (Vital Signs):** Exact source-record Baseline derivations (`ABLFL`) with `SRCSEQ` traceability, Change from Baseline calculations, and a QC gate for same-day ambiguity when collection time is unavailable.
 - **ADAE (Adverse Events):** Treatment-emergent classification (`TRTEMFL`) and the first treatment-emergent occurrence per subject and decoded term (`AOCCFL`).
-- **ADLB (Laboratory Analysis):** Biochemical logic implementation, including on-the-fly SI unit conversions (e.g., Glucose mg/dL to mmol/L) and derivation of clinical abnormality indicators (`LBNRIND`).
+- **ADLB (Laboratory Analysis):** Exact source-record Baseline derivations with ambiguity controls, plus biochemical logic including on-the-fly SI unit conversions (e.g., Glucose mg/dL to mmol/L) and clinical abnormality indicators (`LBNRIND`).
 - **ADTTE (Time-to-Event):** Survival analysis dataset modeling, calculating Time to First Adverse Event and applying mathematical right-censoring (`CNSR`) using study cutoff dates.
 
 ### Phase 3: Quality Control & TLFs
@@ -37,7 +37,7 @@ RAW EDC ──▶ SDTM (DM, AE, EX, LB, VS, CM, MH, EG, SV, DS) ──▶ ADaM (
 - **TLFs (Tables, Listings, Figures):** Generation of regulatory-grade RTF outputs using ODS.
   - **Table 1:** Demographics and Baseline Characteristics (Intent-to-Treat population) using `PROC TABULATE`.
   - **Figure 1:** Kaplan-Meier Survival Curve estimating adverse event probabilities over time using `PROC LIFETEST`.
-- **Define-XML v2.0:** Dynamic extraction of metadata using SAS dictionary tables, enriched with controlled terminology (`CodeList`), variable origins and explicit derivation methods (`MethodDef`). The output remains an educational metadata prototype rather than a submission-ready Define-XML package.
+- **Define-XML v2.0:** Dynamic extraction of metadata using SAS dictionary tables, enriched with controlled terminology (`CodeList`), variable origins, explicit derivation methods (`MethodDef`), and format-aware `text`, `date`, `datetime`, `time`, `integer`, and `float` types. The output remains an educational metadata prototype rather than a submission-ready Define-XML package.
 
 ## ⚙️ How to Reproduce this Pipeline
 
@@ -71,4 +71,4 @@ To run this project locally or in SAS OnDemand for Academics (SODA):
    * **Phase 2 (Core ADaM):** Run `adam_adsl.sas`. *(Crucial: This generates the Safety/ITT populations and treatment dates needed by all subsequent domains).*
    * **Phase 3 (Analysis Domains):** Run `adam_adae.sas`, `adam_advs.sas`, and `adam_adlb.sas`.
    * **Phase 4 (Survival Analysis):** Run `adam_adtte.sas`. *(Note: This explicitly depends on the derived ADAE dataset).*
-   * **Phase 5 (Reporting & Validation):** Run `tlf_table1.sas`, `tlf_figure1.sas`, `qc_core.sas` (29 checks), and finally `generate_define.sas` to output the XML metadata dictionary.
+   * **Phase 5 (Reporting & Validation):** Run `tlf_table1.sas`, `tlf_figure1.sas`, `qc_core.sas` (31 checks), and finally `generate_define.sas` to output the XML metadata dictionary.
