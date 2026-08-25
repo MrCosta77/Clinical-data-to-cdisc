@@ -51,7 +51,9 @@ data work.cm_draft;
         CMENDTC = put(_end, is8601da.);
     end;
     
-    /* Handle Ongoing Medications */
+    /* The synthetic EDC defines ONGOING at STUDY_END_DAT, which becomes
+       DM.RFENDTC. CMENTPT is attached below from that existing assessment
+       boundary; it is not an imputed medication stop date. */
     if ONGOING = 'Y' then CMENRTPT = 'ONGOING';
     else CMENRTPT = '';
     
@@ -63,14 +65,38 @@ proc sort data=work.cm_draft;
     by USUBJID CMSTDTC CMTRT;
 run;
 
+proc sort data=sdtm.dm(keep=USUBJID RFENDTC)
+          out=work.dm_cm_anchor;
+    by USUBJID;
+run;
+
+data work.dm_cm_anchor;
+    set work.dm_cm_anchor;
+    length _CMENTPT_ANCHOR $10;
+    _CMENTPT_ANCHOR = RFENDTC;
+    keep USUBJID _CMENTPT_ANCHOR;
+run;
+
 data sdtm.cm;
     /* Retain ensures strict CDISC column order */
-    retain STUDYID DOMAIN USUBJID CMSEQ CMTRT CMDECOD CMDOSE CMDOSU CMSTDTC CMENDTC CMENRTPT;
-    set work.cm_draft;
+    retain STUDYID DOMAIN USUBJID CMSEQ CMTRT CMDECOD CMDOSE CMDOSU
+           CMSTDTC CMENDTC CMENRTPT CMENTPT;
+    merge work.cm_draft(in=in_cm) work.dm_cm_anchor;
     by USUBJID;
+    if in_cm;
+
+    /* CMENRTPT must always identify the reference time point it describes. */
+    if CMENRTPT = 'ONGOING' then do;
+        CMENTPT = _CMENTPT_ANCHOR;
+        if missing(CMENTPT) then
+            putlog 'ERROR: Ongoing CM record has no DM reference end: ' USUBJID=;
+    end;
+    else CMENTPT = '';
     
     if first.USUBJID then CMSEQ = 1;
     else CMSEQ + 1;
+
+    drop _CMENTPT_ANCHOR;
 run;
 
 /* 5. VISUAL AUDIT */

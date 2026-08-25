@@ -34,6 +34,7 @@ data meta_data;
         when ('AEOUT') codelist_oid = 'CL.AEOUT';
         when ('LBNRIND') codelist_oid = 'CL.LBNRIND';
         when ('CNSR') codelist_oid = 'CL.CNSR';
+        when ('CMENRTPT') codelist_oid = 'CL.STENRF';
         otherwise codelist_oid = '';
     end;
 
@@ -42,6 +43,7 @@ data meta_data;
         when ('DM.SITEID') method_oid = 'MT.DM.SITEID';
         when ('DM.RACE') method_oid = 'MT.DM.RACE';
         when ('CM.CMDECOD') method_oid = 'MT.CM.CMDECOD';
+        when ('CM.CMENTPT') method_oid = 'MT.CM.CMENTPT';
         when ('ADSL.TRT01P') method_oid = 'MT.ADSL.TRT01P';
         when ('ADSL.TRT01A') method_oid = 'MT.ADSL.TRT01A';
         when ('ADSL.ITTFL') method_oid = 'MT.ADSL.ITTFL';
@@ -216,6 +218,9 @@ data _null_;
     put '        <CodeListItem CodedValue="0"><Decode><TranslatedText>Event</TranslatedText></Decode></CodeListItem>';
     put '        <CodeListItem CodedValue="1"><Decode><TranslatedText>Censored</TranslatedText></Decode></CodeListItem>';
     put '      </CodeList>';
+    put '      <CodeList OID="CL.STENRF" Name="Start End Relative to Reference Time Point" DataType="text">';
+    put '        <CodeListItem CodedValue="ONGOING"><Decode><TranslatedText>Ongoing</TranslatedText></Decode></CodeListItem>';
+    put '      </CodeList>';
 run;
 
 /* 6. Write the principal derivation methods referenced by ItemRef */
@@ -225,6 +230,7 @@ data _null_;
     put '      <MethodDef OID="MT.DM.SITEID" Name="Site Identifier" Type="Computation"><Description><TranslatedText>Copy SITE from the raw demographic record after type-safe character conversion.</TranslatedText></Description></MethodDef>';
     put '      <MethodDef OID="MT.DM.RACE" Name="Race Terminology Mapping" Type="Computation"><Description><TranslatedText>Map the EDC race label to the supported CDISC controlled term.</TranslatedText></Description></MethodDef>';
     put '      <MethodDef OID="MT.CM.CMDECOD" Name="Medication Normalization" Type="Computation"><Description><TranslatedText>Normalize the approved Paracetamol source synonym to the standard ingredient name Acetaminophen; retain the uppercase source name for the remaining educational dictionary entries.</TranslatedText></Description></MethodDef>';
+    put '      <MethodDef OID="MT.CM.CMENTPT" Name="Ongoing Medication Assessment Point" Type="Computation"><Description><TranslatedText>For a medication reported as ongoing at the end of subject participation, copy the existing DM.RFENDTC assessment boundary to CMENTPT; this anchors CMENRTPT and does not assert a clinical stop date.</TranslatedText></Description></MethodDef>';
     put '      <MethodDef OID="MT.ADSL.TRT01P" Name="Planned Treatment" Type="Computation"><Description><TranslatedText>Derive planned treatment from the randomized arm in DM.</TranslatedText></Description></MethodDef>';
     put '      <MethodDef OID="MT.ADSL.TRT01A" Name="Actual Treatment" Type="Computation"><Description><TranslatedText>Derive actual treatment from the first exposure record in EX.</TranslatedText></Description></MethodDef>';
     put '      <MethodDef OID="MT.ADSL.ITTFL" Name="Intent-to-Treat Flag" Type="Computation"><Description><TranslatedText>Set to Y for randomized subjects and N for screen failures.</TranslatedText></Description></MethodDef>';

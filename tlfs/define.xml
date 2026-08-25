@@ -145,6 +145,7 @@
 <ItemRef ItemOID="IT.CM.CMSTDTC" Mandatory="No"/>
 <ItemRef ItemOID="IT.CM.CMENDTC" Mandatory="No"/>
 <ItemRef ItemOID="IT.CM.CMENRTPT" Mandatory="No"/>
+<ItemRef ItemOID="IT.CM.CMENTPT" Mandatory="No" MethodOID="MT.CM.CMENTPT"/>
       </ItemGroupDef>
 <ItemGroupDef OID="IG.DM" Name="DM" Repeating="No" IsReferenceData="No">
 <Description><TranslatedText>DMDataset (SDTM)</TranslatedText></Description>
@@ -928,6 +929,13 @@
       </ItemDef>
 <ItemDef OID="IT.CM.CMENRTPT" Name="CMENRTPT" DataType="text" Length="8">
 <Description><TranslatedText>CMENRTPT</TranslatedText></Description>
+<CodeListRef CodeListOID="CL.STENRF"/>
+<def:Origin Type="Derived">
+<Description><TranslatedText>Derived from the source EDC extract by the versioned SDTM program.</TranslatedText></Description>
+        </def:Origin>
+      </ItemDef>
+<ItemDef OID="IT.CM.CMENTPT" Name="CMENTPT" DataType="text" Length="10">
+<Description><TranslatedText>CMENTPT</TranslatedText></Description>
 <def:Origin Type="Derived">
 <Description><TranslatedText>Derived from the source EDC extract by the versioned SDTM program.</TranslatedText></Description>
         </def:Origin>
@@ -1539,10 +1547,14 @@
         <CodeListItem CodedValue="0"><Decode><TranslatedText>Event</TranslatedText></Decode></CodeListItem>
         <CodeListItem CodedValue="1"><Decode><TranslatedText>Censored</TranslatedText></Decode></CodeListItem>
       </CodeList>
+      <CodeList OID="CL.STENRF" Name="Start End Relative to Reference Time Point" DataType="text">
+        <CodeListItem CodedValue="ONGOING"><Decode><TranslatedText>Ongoing</TranslatedText></Decode></CodeListItem>
+      </CodeList>
       <MethodDef OID="MT.DM.USUBJID" Name="Unique Subject Identifier" Type="Computation"><Description><TranslatedText>Concatenate STUDYID and SUBJID with a hyphen.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.DM.SITEID" Name="Site Identifier" Type="Computation"><Description><TranslatedText>Copy SITE from the raw demographic record after type-safe character conversion.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.DM.RACE" Name="Race Terminology Mapping" Type="Computation"><Description><TranslatedText>Map the EDC race label to the supported CDISC controlled term.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.CM.CMDECOD" Name="Medication Normalization" Type="Computation"><Description><TranslatedText>Normalize the approved Paracetamol source synonym to the standard ingredient name Acetaminophen; retain the uppercase source name for the remaining educational dictionary entries.</TranslatedText></Description></MethodDef>
+      <MethodDef OID="MT.CM.CMENTPT" Name="Ongoing Medication Assessment Point" Type="Computation"><Description><TranslatedText>For a medication reported as ongoing at the end of subject participation, copy the existing DM.RFENDTC assessment boundary to CMENTPT; this anchors CMENRTPT and does not assert a clinical stop date.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.ADSL.TRT01P" Name="Planned Treatment" Type="Computation"><Description><TranslatedText>Derive planned treatment from the randomized arm in DM.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.ADSL.TRT01A" Name="Actual Treatment" Type="Computation"><Description><TranslatedText>Derive actual treatment from the first exposure record in EX.</TranslatedText></Description></MethodDef>
       <MethodDef OID="MT.ADSL.ITTFL" Name="Intent-to-Treat Flag" Type="Computation"><Description><TranslatedText>Set to Y for randomized subjects and N for screen failures.</TranslatedText></Description></MethodDef>

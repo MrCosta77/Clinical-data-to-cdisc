@@ -82,6 +82,8 @@ def generate_extras() -> None:
 
         for _ in range(rng.randint(0, 3)):
             cm_start = consent - timedelta(days=rng.randint(10, 365))
+            # ONGOING is assessed at the subject's study_end boundary. The SDTM
+            # transform therefore uses DM.RFENDTC as CMENTPT, not as CMENDTC.
             ongoing = rng.random() < 0.40
             cm_end = None if ongoing else consent + timedelta(days=rng.randint(10, max(10, (study_end - consent).days)))
             if cm_end:

@@ -40,8 +40,14 @@ def test_cm_applies_the_approved_medication_normalization():
     qc = _source("qc/qc_core.sas")
     assert "CMTRT CMDECOD $50" in source
     assert "when ('PARACETAMOL') CMDECOD = 'ACETAMINOPHEN'" in source
+    assert "_CMENTPT_ANCHOR = RFENDTC" in source
+    assert "CMENTPT = _CMENTPT_ANCHOR" in source
+    assert "CMENRTPT CMENTPT" in source
     assert "MT.CM.CMDECOD" in define
+    assert "MT.CM.CMENTPT" in define
+    assert "CL.STENRF" in define
     assert "ACETAMINOPHEN" in qc
+    assert "SDTM-025" in qc
 
 
 def test_qc_covers_new_semantic_contracts():
@@ -50,13 +56,14 @@ def test_qc_covers_new_semantic_contracts():
         "SDTM-020", "SDTM-021", "ADAE-002", "ADAE-003",
         "ADVS-002", "ADLB-002", "ADSL-003", "ADSL-004", "ADTTE-001",
         "ADTTE-002", "ADTTE-003", "SDTM-022", "SDTM-023", "SDTM-024",
+        "SDTM-025",
     ):
         assert check_id in source
     assert "Baseline date has exactly one eligible source record" in source
     assert "ALL &n_checks CHECKS PASSED" in source
     check_ids = re.findall(r"select '([^']+)' as CHECK_ID", source)
-    assert len(check_ids) == 38
-    assert len(set(check_ids)) == 38
+    assert len(check_ids) == 39
+    assert len(set(check_ids)) == 39
 
 
 def test_adtte_uses_participant_specific_follow_up():

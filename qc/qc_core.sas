@@ -479,6 +479,25 @@ proc sql noprint;
     );
 quit;
 
+/* RULE 39: Ongoing CM timing must have an explicit observed reference point. */
+proc sql noprint;
+    create table chk_cm02 as
+    select 'SDTM-025' as CHECK_ID, 'CM' as DOMAIN,
+           'Ongoing CM must be anchored to the DM reference end' as RULE,
+           count(*) as N_FAIL
+    from sdtm.cm c
+    inner join sdtm.dm d on c.USUBJID = d.USUBJID
+    where upcase(strip(c.CMENRTPT)) not in ('', 'ONGOING')
+       or (upcase(strip(c.CMENRTPT)) = 'ONGOING' and (
+              not missing(c.CMENDTC)
+           or missing(c.CMENTPT)
+           or prxmatch('/^\d{4}-\d{2}-\d{2}$/', strip(c.CMENTPT)) = 0
+           or c.CMENTPT ne d.RFENDTC
+          ))
+       or (upcase(strip(c.CMENRTPT)) ne 'ONGOING' and
+           not missing(c.CMENTPT));
+quit;
+
 
 /* -------------------------------------------------------------------
    2. CONSOLIDATE RESULTS (Generate Permanent Data)
@@ -495,7 +514,7 @@ data adam.qc_report;
         chk_mh01 chk_mh02 chk_mh03 chk_mh04 chk_dm02
         chk_sv01 chk_sv02 chk_sv03 chk_ds01 chk_ds02
         chk_dm03 chk_dm04 chk_adae02 chk_adae03
-        chk_cm01 chk_ds03 chk_seq01;
+        chk_cm01 chk_ds03 chk_seq01 chk_cm02;
         
     if N_FAIL = 0 then STATUS = "PASS";
     else STATUS = "FAIL";
