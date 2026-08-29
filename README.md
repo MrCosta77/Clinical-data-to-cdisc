@@ -4,15 +4,45 @@ An educational end-to-end clinical data pipeline demonstrating the transformatio
 
 This project is designed to showcase clinical data engineering, defensive SAS programming, and statistical analysis dataset derivation, culminating in a structural Define-XML v2.0 metadata prototype.
 
-## 🚀 Core Engineering Philosophy
+## 🚀 Quick Start
+
+Get the project locally to review the SAS macros and Python scripts:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/MrCosta77/Clinical-data-to-CDISC.git
+cd Clinical-data-to-CDISC
+
+# 2. Set up a virtual environment (for Python data generators)
+python -m venv venv
+venv\Scripts\activate  # Windows
+
+# 3. Install Python dependencies
+pip install pandas numpy
+
+# 4. Generate the raw synthetic EDC data
+python data_generator.py
+
+# 5. Run the SAS pipeline
+# Open the .sas scripts in SAS Studio or SAS Enterprise Guide and run them in order.
+```
+
+## 📐 Architecture Flow
+
+```mermaid
+flowchart LR
+    RAW[("📄 Raw EDC<br>(CSV/Excel)")] --> SDTM["⚙️ SDTM Mapping<br>(SAS)"]
+    SDTM --> SDTM_DB[("📊 SDTM Datasets<br>(DM, AE, EX, etc.)")]
+    SDTM_DB --> ADAM["🧪 ADaM Derivation<br>(SAS)"]
+    ADAM --> ADAM_DB[("📈 ADaM Datasets<br>(ADSL, ADAE, etc.)")]
+    ADAM_DB --> QC["🔍 QC Framework"]
+    QC --> TLF["📄 TLFs & Define-XML"]
+```
+
+## 🧠 Core Engineering Philosophy
 * **Educational Terminology Mapping:** Utilizes mock dictionaries to simulate MedDRA and CDISC Controlled Terminology mapping.
 * **Defensive SAS Programming:** Extensive use of dynamic type-checking (`vtype`), `anydtdte` informats, and robust ISO 8601 date conversions (`is8601da.`) to prevent data loss from unstructured EDC formats.
 * **Advanced Derivations:** Complex logic for ongoing clinical events, baseline flagging (`ABLFL`), and temporal treatment-emergent derivations (`TRTEMFL`).
-
-## 📂 Target Architecture
-The pipeline follows a rule-based clinical data transformation approach, culminating in survival analysis modeling and portfolio-style presentation layers:
-
-RAW EDC ──▶ SDTM (DM, AE, EX, LB, VS, CM, MH, EG, SV, DS) ──▶ ADaM (ADSL, ADAE, ADVS, ADLB, ADTTE) ──▶ QC Framework ──▶ TLFs & Define-XML
 
 ## 🛠️ Development Milestones
 
