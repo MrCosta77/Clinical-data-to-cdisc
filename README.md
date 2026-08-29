@@ -21,10 +21,10 @@ venv\Scripts\activate  # Windows
 pip install pandas numpy
 
 # 4. Generate the raw synthetic EDC data
-python data_generator.py
+python scripts/generate_raw_edc.py
 
 # 5. Run the SAS pipeline
-# Open the .sas scripts in SAS Studio or SAS Enterprise Guide and run them in order.
+# Open run_all.sas in SAS Studio or SAS Enterprise Guide and run it.
 ```
 
 ## 📐 Architecture Flow
