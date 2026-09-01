@@ -4,6 +4,22 @@ An educational end-to-end clinical data pipeline demonstrating the transformatio
 
 This project is designed to showcase clinical data engineering, defensive SAS programming, and statistical analysis dataset derivation, culminating in a structural Define-XML v2.0 metadata prototype.
 
+## Portfolio evidence — 30-second review
+
+| Question | Evidence in this repository |
+|---|---|
+| **What problem does it address?** | Converts inconsistent, EDC-style source extracts into traceable SDTM-inspired domains and analysis-ready ADaM datasets. |
+| **What goes in?** | Reproducible **synthetic** demographics, exposure, adverse-event, medication, laboratory, vital-sign, ECG, visit, and disposition data generated under [`scripts/`](scripts/). |
+| **What comes out?** | SDTM-inspired domains, ADSL/ADAE/ADLB/ADVS/ADTTE, portfolio TLFs, a QC report, and a structural [`Define-XML v2.0 prototype`](tlfs/define.xml). |
+| **How is it verified?** | Defensive SAS QC can stop the pipeline on critical findings; versioned Python contract tests and the [GitHub Actions quality gate](.github/workflows/quality.yml) check raw-data and SAS-program invariants. |
+| **What can a reviewer inspect quickly?** | [`tests/`](tests/), [`qc/`](qc/), the generated [`QC report`](tlfs/qc_report.rtf), [`Table 1`](tlfs/tlf_table1.rtf), and [`Figure 1`](tlfs/tlf_figure1.rtf). |
+| **What are the limits?** | Educational portfolio implementation using synthetic data and mock terminology dictionaries. It has not undergone formal Pinnacle 21 validation, regulatory submission validation, or production qualification. |
+
+The complete reproduction path is documented in [How to Reproduce this
+Pipeline](#how-to-reproduce-this-pipeline). Results are evidence of internal
+consistency and traceability for the supplied synthetic study—not evidence of
+regulatory acceptance.
+
 ## 🚀 Quick Start
 
 Get the project locally to review the SAS macros and Python scripts:
